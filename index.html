@@ -1,0 +1,1405 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AI Data Analyst</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      bg: 'var(--bg)', surface: 'var(--surface)', sunk: 'var(--sunk)', line: 'var(--line)',
+      ink: 'var(--ink)', mute: 'var(--mute)', accent: 'var(--accent)', onaccent: 'var(--on-accent)',
+      accentsoft: 'var(--accent-soft)', good: 'var(--good)', goodsoft: 'var(--good-soft)',
+      warn: 'var(--warn)', warnsoft: 'var(--warn-soft)', bad: 'var(--bad)', badsoft: 'var(--bad-soft)',
+      info: 'var(--info)', infosoft: 'var(--info-soft)'
+    },
+    fontFamily: {
+      display: ['"Bricolage Grotesque"', '"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+      sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+      mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
+    }
+  } }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+<style>
+/* Layout: persistent left rail (workspace / admin switch), slim top bar, scrolling main. Chat is a three-pane working surface. */
+:root {
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#EAEEEA; --line:#DCE2DD;
+  --ink:#15211D; --mute:#5B6862;
+  --accent:#17695C; --on-accent:#FFFFFF; --accent-soft:#DDEEE9;
+  --good:#1E7A45; --good-soft:#DDF0E4; --warn:#9A5806; --warn-soft:#F8EBD0;
+  --bad:#B3321F; --bad-soft:#F8DFDA; --info:#2F5FA8; --info-soft:#DFE8F5;
+  --c1:#17695C; --c2:#2F5FA8; --c3:#B0690B; --c4:#6B5AA6; --c5:#B3321F;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0E1513; --surface:#151E1B; --sunk:#0B100F; --line:#26332E;
+    --ink:#E6EEEA; --mute:#94A39C;
+    --accent:#4DB8A3; --on-accent:#07201B; --accent-soft:#163029;
+    --good:#5FC48A; --good-soft:#14301F; --warn:#E0A44A; --warn-soft:#33270F;
+    --bad:#EE7C69; --bad-soft:#381A15; --info:#7FA8E8; --info-soft:#172640;
+    --c1:#4DB8A3; --c2:#7FA8E8; --c3:#E0A44A; --c4:#A996E0; --c5:#EE7C69;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0E1513; --surface:#151E1B; --sunk:#0B100F; --line:#26332E;
+  --ink:#E6EEEA; --mute:#94A39C;
+  --accent:#4DB8A3; --on-accent:#07201B; --accent-soft:#163029;
+  --good:#5FC48A; --good-soft:#14301F; --warn:#E0A44A; --warn-soft:#33270F;
+  --bad:#EE7C69; --bad-soft:#381A15; --info:#7FA8E8; --info-soft:#172640;
+  --c1:#4DB8A3; --c2:#7FA8E8; --c3:#E0A44A; --c4:#A996E0; --c5:#EE7C69;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.i { display: inline-block; width: 1.125rem; height: 1.125rem; flex: none; }
+.i svg { width: 100%; height: 100%; display: block; }
+.num { font-variant-numeric: tabular-nums; }
+.kw { color: var(--info); font-weight: 500; } .str { color: var(--good); } .cm { color: var(--mute); }
+[x-cloak] { display: none !important; }
+.scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; } .scroll-thin::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+@keyframes blink { 0%,80%,100% { opacity:.25 } 40% { opacity:1 } }
+.dot { animation: blink 1.2s infinite; } .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
+@keyframes rise { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform:none } }
+.rise { animation: rise .25s ease-out both; }
+@keyframes phIn { to { opacity: 1; transform: none; } }
+.ph-word { opacity: 0; transform: translateY(5px); animation: phIn .38s cubic-bezier(.2,.7,.2,1) forwards; }
+@media (prefers-reduced-motion: reduce) { .dot, .rise { animation: none; } .ph-word { animation: none; opacity: 1; transform: none; } * { transition: none !important; } }
+</style>
+<style type="text/tailwindcss">
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md border border-line bg-surface text-ink text-[13px] font-medium whitespace-nowrap hover:bg-sunk focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50 disabled:pointer-events-none; }
+  .btn-primary { @apply bg-accent text-onaccent border-transparent hover:bg-accent hover:opacity-90; }
+  .btn-sm { @apply h-8 px-2.5 text-xs; }
+  .btn-danger { @apply text-bad; }
+  .btn-ghost { @apply border-transparent bg-transparent hover:bg-sunk; }
+  .card { @apply bg-surface border border-line rounded-[10px]; }
+  .input { @apply h-9 w-full rounded-md border border-line bg-surface px-3 text-[13px] text-ink placeholder:text-mute focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent; }
+  .lbl { @apply block text-xs font-medium text-mute mb-1; }
+  .pill { @apply inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-[11px] font-medium whitespace-nowrap; }
+  .p-good { @apply bg-goodsoft text-good; } .p-warn { @apply bg-warnsoft text-warn; } .p-bad { @apply bg-badsoft text-bad; }
+  .p-info { @apply bg-infosoft text-info; } .p-mute { @apply bg-sunk text-mute; }
+  .th { @apply text-left text-[11px] font-medium uppercase tracking-wider text-mute px-3 py-2 border-b border-line whitespace-nowrap bg-sunk; }
+  .td { @apply px-3 py-2.5 border-b border-line align-middle; }
+  .h1 { @apply font-display text-[26px] leading-tight font-semibold tracking-tight; }
+  .h2 { @apply font-display text-[17px] font-semibold tracking-tight; }
+  .eyebrow { @apply text-[11px] font-medium uppercase tracking-[0.08em] text-mute; }
+  .nav { @apply flex items-center gap-2.5 h-9 px-2.5 rounded-md text-[13px] font-medium text-mute hover:bg-sunk hover:text-ink w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent; }
+  .nav-on { @apply bg-accentsoft text-accent hover:bg-accentsoft hover:text-accent; }
+  .tab { @apply h-9 px-3 text-[13px] font-medium text-mute border-b-2 border-transparent hover:text-ink; }
+  .tab-on { @apply text-ink border-accent; }
+  .chip { @apply inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-line bg-surface text-xs text-ink hover:bg-sunk text-left; }
+}
+</style>
+
+<div x-data="app()" x-cloak class="h-full flex bg-bg text-ink">
+
+  <div x-show="nav" @click="nav=false" class="fixed inset-0 z-30 lg:hidden" style="background:rgba(8,14,12,.5)"></div>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside :class="nav ? 'translate-x-0' : '-translate-x-full'" class="fixed lg:static inset-y-0 left-0 z-40 w-[264px] max-w-[86vw] shrink-0 flex flex-col bg-surface border-r border-line transition-transform lg:translate-x-0" style="padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)">
+    <div class="h-14 flex items-center gap-2.5 border-b border-line" style="padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px">
+      <svg viewBox="0 0 32 32" class="w-7 h-7 shrink-0" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 21l6-6 4 4 8-9" fill="none" stroke="var(--on-accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="10" r="2.4" fill="var(--on-accent)"/></svg>
+      <div class="leading-tight"><div class="font-display font-semibold text-[15px]">AI Data Analyst</div><div class="text-[11px] text-mute">Working name</div></div>
+    </div>
+
+    <div class="p-3" style="padding-left:max(12px,env(safe-area-inset-left,0px))">
+      <div class="grid grid-cols-2 p-0.5 rounded-md bg-sunk text-xs font-medium" role="tablist" aria-label="Area">
+        <button role="tab" :aria-selected="!admin" @click="go('home')" :class="!admin ? 'bg-surface text-ink shadow-sm' : 'text-mute'" class="h-8 rounded">Workspace</button>
+        <button role="tab" :aria-selected="admin" @click="go('admin-overview')" :class="admin ? 'bg-surface text-ink shadow-sm' : 'text-mute'" class="h-8 rounded">Admin</button>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto scroll-thin px-3 pb-3 flex flex-col gap-0.5" style="padding-left:max(12px,env(safe-area-inset-left,0px))" aria-label="Main">
+      <template x-for="n in items" :key="n.k">
+        <button class="nav" :class="view===n.k && 'nav-on'" @click="go(n.k)" :aria-current="view===n.k ? 'page' : null">
+          <i class="i" x-ic="n.i"></i><span x-text="n.l"></span>
+          <span x-show="n.badge" class="ml-auto pill p-bad num" x-text="n.badge"></span>
+        </button>
+      </template>
+
+      <template x-if="!admin">
+        <div class="mt-5">
+          <div class="eyebrow px-2.5 mb-1.5">Recent analyses</div>
+          <template x-for="h in history.slice(0,4)" :key="h.t">
+            <button class="nav h-auto py-1.5 font-normal" @click="go('chat')"><span class="truncate" x-text="h.t"></span></button>
+          </template>
+        </div>
+      </template>
+      <template x-if="admin">
+        <div class="mt-5 mx-0.5 p-3 rounded-lg bg-sunk text-xs text-mute leading-relaxed">
+          <div class="flex items-center gap-1.5 text-ink font-medium mb-1"><i class="i !w-4 !h-4" x-ic="'lock'"></i>Signed in as super admin</div>
+          MFA verified 41 min ago. Session expires in 3 h 19 min. Every action on these screens is written to the audit log.
+        </div>
+      </template>
+    </nav>
+
+    <div class="border-t border-line p-3 flex items-center gap-2.5" style="padding-left:max(12px,env(safe-area-inset-left,0px))">
+      <div class="w-8 h-8 rounded-full bg-accentsoft text-accent grid place-items-center text-xs font-semibold">AN</div>
+      <div class="min-w-0 leading-tight"><div class="text-[13px] font-medium truncate">Amara Nwosu</div><div class="text-[11px] text-mute truncate" x-text="admin ? 'Super administrator' : 'Team plan'"></div></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="flex-1 min-w-0 flex flex-col h-full">
+    <header class="h-14 shrink-0 border-b border-line bg-surface flex items-center gap-3 gutter">
+      <button class="btn btn-ghost !px-2 lg:hidden" @click="nav=true" aria-label="Open menu"><i class="i" x-ic="'menu'"></i></button>
+      <div class="min-w-0">
+        <div class="eyebrow leading-none" x-text="admin ? 'Admin console' : 'Workspace'"></div>
+        <h1 class="font-display font-semibold text-[16px] leading-tight truncate" x-text="titles[view]"></h1>
+      </div>
+      <div class="ml-auto flex items-center gap-1.5">
+        <span class="hidden sm:inline-flex pill p-good"><span class="w-1.5 h-1.5 rounded-full bg-good"></span>All systems operational</span>
+        <button class="btn btn-ghost !px-2" @click="toggleTheme()" :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"><i class="i" x-ic="isDark ? 'sun' : 'moon'"></i></button>
+      </div>
+    </header>
+
+    <main :class="view==='chat' ? 'overflow-hidden' : 'overflow-y-auto'" class="flex-1 min-h-0 relative">
+
+      <!-- =============== HOME =============== -->
+      <template x-if="view==='home'">
+        <div class="gutter py-8 max-w-[1120px] mx-auto rise">
+          <div class="max-w-[640px]">
+            <div class="eyebrow mb-2">New analysis</div>
+            <h2 class="h1 text-[32px] sm:text-[38px]">Ask your data a question. Get an answer you can check.</h2>
+            <p class="mt-3 text-mute text-[15px] leading-relaxed">Bring a database or a file. Every number comes from a query you can read, run read-only, against the data you own.</p>
+          </div>
+
+          <div class="mt-7 grid md:grid-cols-2 gap-4">
+            <button @click="go('connections'); openConn()" class="card p-5 text-left hover:border-accent transition-colors group focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+              <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-lg bg-accentsoft text-accent grid place-items-center shrink-0"><i class="i !w-6 !h-6" x-ic="'plug'"></i></div>
+                <div class="min-w-0">
+                  <div class="h2">Connect a database</div>
+                  <p class="text-mute mt-1">Link a live database with a read-only login. The schema is mapped for you.</p>
+                  <div class="mt-3 flex flex-wrap gap-1.5"><template x-for="t in ['PostgreSQL','MySQL','MariaDB','SQL Server']"><span class="pill p-mute" x-text="t"></span></template></div>
+                </div>
+                <i class="i ml-auto mt-1 text-mute group-hover:text-accent" x-ic="'chevron'"></i>
+              </div>
+            </button>
+            <button @click="go('datasets')" class="card p-5 text-left hover:border-accent transition-colors group focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+              <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-lg bg-infosoft text-info grid place-items-center shrink-0"><i class="i !w-6 !h-6" x-ic="'upload'"></i></div>
+                <div class="min-w-0">
+                  <div class="h2">Upload a database</div>
+                  <p class="text-mute mt-1">Drop in a file. It is validated, imported into an isolated store and ready in minutes.</p>
+                  <div class="mt-3 flex flex-wrap gap-1.5"><template x-for="t in ['SQLite','SQL dump','CSV','Excel','JSON']"><span class="pill p-mute" x-text="t"></span></template></div>
+                </div>
+                <i class="i ml-auto mt-1 text-mute group-hover:text-accent" x-ic="'chevron'"></i>
+              </div>
+            </button>
+          </div>
+
+          <div class="mt-8 grid lg:grid-cols-3 gap-4">
+            <section class="card lg:col-span-1">
+              <div class="px-4 pt-4 pb-2 flex items-center"><h3 class="h2">Your data sources</h3></div>
+              <ul class="px-2 pb-2">
+                <template x-for="s in sources" :key="s.name">
+                  <li><button class="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-sunk text-left" @click="source=s.name; go('chat')">
+                    <span class="w-8 h-8 rounded-md bg-sunk grid place-items-center text-mute shrink-0"><i class="i !w-4 !h-4" x-ic="s.kind==='db' ? 'db' : 'file'"></i></span>
+                    <span class="min-w-0 flex-1"><span class="block text-[13px] font-medium truncate" x-text="s.name"></span><span class="block text-xs text-mute truncate" x-text="s.meta"></span></span>
+                    <span class="pill" :class="pill(s.status)" x-text="s.status==='Ready for Analysis' ? 'Ready' : s.status"></span>
+                  </button></li>
+                </template>
+              </ul>
+            </section>
+            <section class="card lg:col-span-1">
+              <div class="px-4 pt-4 pb-2"><h3 class="h2">Suggested questions</h3><p class="text-xs text-mute mt-0.5">Based on the tables found in Trade Orders</p></div>
+              <div class="px-4 pb-4 flex flex-col gap-2">
+                <template x-for="q in suggestions" :key="q">
+                  <button class="chip !h-auto py-2 !rounded-lg w-full" @click="ask(q)"><i class="i !w-4 !h-4 text-accent" x-ic="'sparkle'"></i><span x-text="q"></span></button>
+                </template>
+              </div>
+            </section>
+            <section class="card lg:col-span-1">
+              <div class="px-4 pt-4 pb-2 flex items-center"><h3 class="h2">Saved analyses</h3><button class="btn btn-ghost btn-sm ml-auto" @click="go('reports')">All</button></div>
+              <ul class="px-2 pb-2">
+                <template x-for="r in reports.slice(0,4)" :key="r.title">
+                  <li><button class="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-sunk text-left" @click="go('reports')">
+                    <span class="w-8 h-8 rounded-md bg-accentsoft text-accent grid place-items-center shrink-0"><i class="i !w-4 !h-4" x-ic="'chart'"></i></span>
+                    <span class="min-w-0"><span class="block text-[13px] font-medium truncate" x-text="r.title"></span><span class="block text-xs text-mute" x-text="r.source + ' · ' + r.saved"></span></span>
+                  </button></li>
+                </template>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== CHAT =============== -->
+      <template x-if="view==='chat'">
+        <div class="h-full flex">
+          <aside class="hidden xl:flex w-[260px] shrink-0 flex-col border-r border-line bg-surface">
+            <div class="p-3"><button class="btn btn-primary w-full" @click="newChat()"><i class="i !w-4 !h-4" x-ic="'plus'"></i>New analysis</button></div>
+            <div class="eyebrow px-4 pb-1">Chat history</div>
+            <div class="flex-1 overflow-y-auto scroll-thin px-2 pb-3">
+              <template x-for="(h,i) in history" :key="h.t">
+                <button class="w-full text-left px-2.5 py-2 rounded-md hover:bg-sunk" :class="i===0 && 'bg-sunk'">
+                  <span class="block text-[13px] font-medium truncate" x-text="h.t"></span>
+                  <span class="block text-[11px] text-mute" x-text="h.s + ' · ' + h.d"></span>
+                </button>
+              </template>
+            </div>
+          </aside>
+
+          <section class="flex-1 min-w-0 flex flex-col">
+            <div class="shrink-0 border-b border-line bg-bg gutter py-2.5 flex flex-wrap items-center gap-2">
+              <label for="src" class="text-xs text-mute">Data source</label>
+              <select id="src" x-model="source" class="input !w-auto min-w-[200px] !h-8 text-xs">
+                <template x-for="s in sources.filter(x=>x.status==='Connected'||x.status==='Ready for Analysis')" :key="s.name"><option :value="s.name" x-text="s.name"></option></template>
+              </select>
+              <span class="pill p-good"><i class="i !w-3 !h-3" x-ic="'lock'"></i>Read-only</span>
+              <span class="pill p-mute hidden sm:inline-flex">Schema refreshed today 01:12</span>
+            </div>
+
+            <div id="thread" class="flex-1 min-h-0 overflow-y-auto scroll-thin">
+              <div class="gutter py-6 max-w-[860px] mx-auto flex flex-col gap-6">
+                <template x-for="(m,idx) in messages" :key="m.id">
+                  <div class="rise">
+                    <!-- user -->
+                    <template x-if="m.role==='user'">
+                      <div class="flex justify-end"><div class="max-w-[85%] rounded-2xl rounded-br-md bg-accent text-onaccent px-4 py-2.5 text-[14px]" x-text="m.text"></div></div>
+                    </template>
+                    <!-- typing -->
+                    <template x-if="m.role==='typing'">
+                      <div class="flex items-center gap-3 text-mute text-[13px]">
+                        <span class="w-7 h-7 rounded-md bg-accentsoft text-accent grid place-items-center"><i class="i !w-4 !h-4" x-ic="'sparkle'"></i></span>
+                        <span class="flex gap-1"><span class="dot w-1.5 h-1.5 rounded-full bg-mute"></span><span class="dot w-1.5 h-1.5 rounded-full bg-mute"></span><span class="dot w-1.5 h-1.5 rounded-full bg-mute"></span></span>
+                        <span x-text="m.step"></span>
+                      </div>
+                    </template>
+                    <!-- ai -->
+                    <template x-if="m.role==='ai'">
+                      <div class="flex gap-3">
+                        <span class="w-7 h-7 shrink-0 rounded-md bg-accentsoft text-accent grid place-items-center mt-0.5"><i class="i !w-4 !h-4" x-ic="'sparkle'"></i></span>
+                        <div class="min-w-0 flex-1 flex flex-col gap-3">
+                          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mute">
+                            <span class="font-medium text-ink">Analyst</span><span>·</span>
+                            <span x-text="m.source"></span><span>·</span><span x-text="m.fresh"></span>
+                          </div>
+
+                          <p class="text-[15px] leading-relaxed" x-text="m.answer"></p>
+
+                          <!-- limitation -->
+                          <template x-if="m.limit">
+                            <div class="rounded-[10px] border border-line bg-warnsoft p-4">
+                              <div class="flex items-center gap-2 font-medium text-warn"><i class="i !w-4 !h-4" x-ic="'alert'"></i>Not enough data to calculate this</div>
+                              <div class="mt-3 grid sm:grid-cols-2 gap-4 text-[13px]">
+                                <div><div class="eyebrow mb-1">Found</div><ul class="space-y-1"><template x-for="f in m.limit.found"><li class="flex gap-2"><i class="i !w-4 !h-4 text-good" x-ic="'check'"></i><code class="font-mono text-xs" x-text="f"></code></li></template></ul></div>
+                                <div><div class="eyebrow mb-1">Missing</div><ul class="space-y-1"><template x-for="f in m.limit.missing"><li class="flex gap-2"><i class="i !w-4 !h-4 text-bad" x-ic="'x'"></i><span x-text="f"></span></li></template></ul></div>
+                              </div>
+                            </div>
+                          </template>
+
+                          <!-- KPIs -->
+                          <template x-if="m.kpis">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              <template x-for="k in m.kpis" :key="k.l">
+                                <div class="card px-4 py-3">
+                                  <div class="text-xs text-mute" x-text="k.l"></div>
+                                  <div class="font-display text-[24px] font-semibold num leading-tight mt-0.5" x-text="k.v"></div>
+                                  <div class="text-xs num mt-0.5" :class="k.up ? 'text-good' : 'text-mute'" x-text="k.d"></div>
+                                </div>
+                              </template>
+                            </div>
+                          </template>
+
+                          <!-- chart -->
+                          <template x-if="m.chart">
+                            <div class="card overflow-hidden">
+                              <div class="px-4 pt-3 flex flex-wrap items-center gap-2">
+                                <div class="min-w-0"><div class="text-[13px] font-medium" x-text="m.chart.title"></div><div class="text-xs text-mute" x-text="m.chart.sub"></div></div>
+                                <div class="ml-auto inline-flex p-0.5 rounded-md bg-sunk text-xs" x-show="m.chart.kind!=='doughnut'" role="group" aria-label="Chart type">
+                                  <template x-for="k in ['line','bar','area']"><button class="px-2.5 h-7 rounded capitalize" :class="m.chart.kind===k ? 'bg-surface text-ink shadow-sm' : 'text-mute'" @click="m.chart.kind=k" x-text="k"></button></template>
+                                </div>
+                              </div>
+                              <div class="h-[260px] px-2 pb-2" x-chart="m.chart" role="img" :aria-label="m.chart.title"></div>
+                            </div>
+                          </template>
+
+                          <!-- table -->
+                          <template x-if="m.table">
+                            <details class="card overflow-hidden group" open>
+                              <summary class="px-4 h-10 flex items-center gap-2 cursor-pointer select-none text-[13px] font-medium list-none"><i class="i !w-4 !h-4 text-mute" x-ic="'table'"></i>Data table<span class="text-xs text-mute font-normal" x-text="'· ' + m.table.rows.length + ' rows'"></span><i class="i !w-4 !h-4 ml-auto text-mute transition-transform group-open:rotate-90" x-ic="'chevron'"></i></summary>
+                              <div x-data="{k:null,d:1, rows(t){ if(this.k===null) return t.rows; const k=this.k,d=this.d; return [...t.rows].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*d) }}" class="overflow-x-auto scroll-thin border-t border-line">
+                                <table class="w-full text-[13px]">
+                                  <thead><tr><template x-for="(c,ci) in m.table.cols" :key="c.h"><th class="th cursor-pointer select-none" :class="c.num && 'text-right'" @click="k===ci ? d=-d : (k=ci, d=1)" :aria-sort="k===ci ? (d===1?'ascending':'descending') : 'none'"><span x-text="c.h"></span><span class="ml-1 text-accent" x-show="k===ci" x-text="d===1 ? '↑' : '↓'"></span></th></template></tr></thead>
+                                  <tbody><template x-for="r in rows(m.table)" :key="r[0]"><tr class="hover:bg-sunk"><template x-for="(c,ci) in m.table.cols" :key="c.h"><td class="td num" :class="c.num && 'text-right'" x-text="cell(r[ci],c)"></td></template></tr></template></tbody>
+                                </table>
+                              </div>
+                            </details>
+                          </template>
+
+                          <!-- interpretation -->
+                          <template x-if="m.note">
+                            <div class="rounded-[10px] border border-dashed border-line px-4 py-3 text-[13px] leading-relaxed">
+                              <div class="eyebrow mb-1 flex items-center gap-1.5"><i class="i !w-3.5 !h-3.5" x-ic="'sparkle'"></i>Interpretation · written by the AI, not calculated</div>
+                              <span x-text="m.note"></span>
+                            </div>
+                          </template>
+
+                          <!-- sql -->
+                          <template x-if="m.sql">
+                            <details class="card overflow-hidden group">
+                              <summary class="px-4 h-10 flex items-center gap-2 cursor-pointer select-none text-[13px] font-medium list-none"><i class="i !w-4 !h-4 text-mute" x-ic="'code'"></i>Generated SQL<span class="pill p-good ml-1"><i class="i !w-3 !h-3" x-ic="'shield'"></i>Validated · read-only</span><i class="i !w-4 !h-4 ml-auto text-mute transition-transform group-open:rotate-90" x-ic="'chevron'"></i></summary>
+                              <div class="border-t border-line bg-sunk">
+                                <pre class="px-4 py-3 overflow-x-auto scroll-thin font-mono text-xs leading-relaxed" x-html="hl(m.sql)"></pre>
+                                <div class="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mute"><span>Executed in <b class="text-ink font-medium num" x-text="m.ms"></b></span><span>Timeout 30 s</span><span>Row cap 10,000</span><span>Calculated by the database, not the model</span></div>
+                              </div>
+                            </details>
+                          </template>
+
+                          <div class="flex flex-wrap items-center gap-2">
+                            <button class="btn btn-sm" @click="toast('Added to Saved reports')"><i class="i !w-4 !h-4" x-ic="'file'"></i>Save to report</button>
+                            <button class="btn btn-sm" @click="toast('Added to Sales overview dashboard')"><i class="i !w-4 !h-4" x-ic="'grid'"></i>Add to dashboard</button>
+                            <div class="inline-flex rounded-md border border-line overflow-hidden bg-surface">
+                              <template x-for="f in ['CSV','Excel','PDF']"><button class="h-8 px-2.5 text-xs font-medium hover:bg-sunk border-r border-line last:border-r-0" @click="toast(f + ' export queued')" x-text="f"></button></template>
+                            </div>
+                          </div>
+
+                          <template x-if="m.follow">
+                            <div class="flex flex-wrap gap-2"><template x-for="f in m.follow"><button class="chip" @click="ask(f)" x-text="f"></button></template></div>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="shrink-0 border-t border-line bg-bg gutter py-3">
+              <form class="max-w-[860px] mx-auto" @submit.prevent="ask(draft)">
+                <div class="card p-2 flex items-end gap-2 focus-within:border-accent">
+                  <label for="q" class="sr-only">Ask a question about your data</label>
+                  <div class="relative flex-1 min-w-0">
+                    <textarea id="q" x-model="draft" rows="1" @keydown.enter.prevent="if(!$event.shiftKey) ask(draft)" class="block w-full resize-none bg-transparent px-2 py-1.5 text-[14px] leading-[1.5] outline-none max-h-32"></textarea>
+                    <div x-show="!draft" class="pointer-events-none absolute inset-0 px-2 py-1.5 text-[14px] leading-[1.5] text-mute flex flex-nowrap gap-x-[0.28em] overflow-hidden whitespace-nowrap" aria-hidden="true">
+                      <template x-for="(w,i) in ('Ask a question about ' + source + '…').split(' ')" :key="source + i">
+                        <span class="inline-block transition-all duration-300 ease-out" :class="i < phShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'" x-text="w"></span>
+                      </template>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary !px-3" :disabled="!draft.trim()" aria-label="Send"><i class="i !w-4 !h-4" x-ic="'send'"></i><span class="hidden sm:inline">Send</span></button>
+                </div>
+                <p class="text-[11px] text-mute mt-1.5 text-center">Queries run read-only. Only the schema and small result samples are shared with the AI provider.</p>
+              </form>
+            </div>
+          </section>
+        </div>
+      </template>
+
+      <!-- =============== CONNECTIONS =============== -->
+      <template x-if="view==='connections'">
+        <div class="gutter py-6 max-w-[1120px] mx-auto rise">
+          <div class="flex flex-wrap items-end gap-3 mb-5">
+            <div><h2 class="h1">Database connections</h2><p class="text-mute mt-1">Credentials are encrypted at rest and never shown again after saving.</p></div>
+            <button class="btn btn-primary ml-auto" @click="openConn()"><i class="i !w-4 !h-4" x-ic="'plus'"></i>Connect database</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <template x-for="c in conns" :key="c.id">
+              <article class="card p-4 flex flex-col gap-3">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-sunk grid place-items-center text-mute shrink-0"><i class="i" x-ic="'db'"></i></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2"><h3 class="text-[15px] font-semibold truncate" x-text="c.name"></h3></div>
+                    <div class="text-xs text-mute truncate"><span x-text="c.type"></span> · <span class="font-mono" x-text="c.host"></span></div>
+                  </div>
+                  <span class="pill" :class="pill(c.status)" x-text="c.status"></span>
+                </div>
+                <template x-if="c.error"><div class="rounded-md bg-badsoft text-bad text-xs px-3 py-2" x-text="c.error"></div></template>
+                <dl class="grid grid-cols-3 gap-2 text-xs">
+                  <div><dt class="text-mute">Tables</dt><dd class="num font-medium text-[13px]" x-text="c.tables ?? '—'"></dd></div>
+                  <div><dt class="text-mute">Last checked</dt><dd class="font-medium text-[13px]" x-text="c.checked"></dd></div>
+                  <div><dt class="text-mute">Schema</dt><dd class="font-medium text-[13px]" x-text="c.refreshed"></dd></div>
+                </dl>
+                <div class="flex flex-wrap gap-2 pt-1 border-t border-line -mx-4 px-4 pt-3">
+                  <button class="btn btn-sm" :disabled="c.busy" @click="testConn(c)"><i class="i !w-4 !h-4" x-ic="'pulse'"></i><span x-text="c.busy==='test' ? 'Testing…' : 'Test'"></span></button>
+                  <button class="btn btn-sm" :disabled="c.busy || !c.tables" @click="refreshSchema(c)"><i class="i !w-4 !h-4" x-ic="'refresh'"></i><span x-text="c.busy==='refresh' ? 'Refreshing…' : 'Refresh schema'"></span></button>
+                  <button class="btn btn-sm" :disabled="!c.tables" @click="schemaFor=c"><i class="i !w-4 !h-4" x-ic="'layers'"></i>Schema</button>
+                  <button class="btn btn-sm btn-danger ml-auto" @click="c.confirm = !c.confirm" x-show="!c.confirm">Disconnect</button>
+                  <template x-if="c.confirm"><div class="ml-auto flex gap-2 items-center"><span class="text-xs text-mute">Remove this connection?</span><button class="btn btn-sm btn-danger" @click="removeConn(c)">Remove</button><button class="btn btn-sm" @click="c.confirm=false">Keep</button></div></template>
+                </div>
+              </article>
+            </template>
+          </div>
+          <div class="mt-6 card p-4 flex gap-3 text-[13px] text-mute"><i class="i text-accent mt-0.5" x-ic="'shield'"></i><p>Create a dedicated read-only database user for this app. Connections to private, loopback and link-local addresses are blocked, and every query is validated before it runs.</p></div>
+        </div>
+      </template>
+
+      <!-- =============== DATASETS =============== -->
+      <template x-if="view==='datasets'">
+        <div class="gutter py-6 max-w-[1120px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">Uploaded datasets</h2><p class="text-mute mt-1">Files are scanned, imported into an isolated store and deleted on your request.</p></div>
+
+          <div class="card border-dashed !border-2 p-8 text-center transition-colors" :class="drag && '!border-accent bg-accentsoft'" @dragover.prevent="drag=true" @dragleave.prevent="drag=false" @drop.prevent="drag=false; pick($event.dataTransfer.files)">
+            <div class="mx-auto w-12 h-12 rounded-full bg-infosoft text-info grid place-items-center"><i class="i !w-6 !h-6" x-ic="'upload'"></i></div>
+            <h3 class="h2 mt-3">Drop a file here</h3>
+            <p class="text-mute mt-1">or choose one from your computer. Up to 250 MB on the Team plan.</p>
+            <div class="mt-4 flex flex-wrap justify-center gap-2">
+              <label for="file" class="btn btn-primary cursor-pointer">Choose file</label>
+              <input id="file" type="file" class="sr-only" @change="pick($event.target.files); $event.target.value=''">
+              <button class="btn" @click="addUpload('regional_sales_2026.csv', 36.4)">Try a sample CSV</button>
+            </div>
+            <div class="mt-4 flex flex-wrap justify-center gap-1.5 text-xs"><template x-for="f in ['.sql','.sqlite','.db','.csv','.xlsx','.json']"><span class="pill p-mute font-mono" x-text="f"></span></template></div>
+          </div>
+
+          <div class="card mt-5 overflow-hidden">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[760px]">
+                <thead><tr><th class="th">Dataset</th><th class="th">Format</th><th class="th text-right">Size</th><th class="th text-right">Tables</th><th class="th">Status</th><th class="th"></th></tr></thead>
+                <tbody>
+                  <template x-for="d in datasets" :key="d.id">
+                    <tr class="hover:bg-sunk">
+                      <td class="td">
+                        <div class="flex items-center gap-3">
+                          <span class="w-8 h-8 rounded-md bg-sunk grid place-items-center text-mute shrink-0"><i class="i !w-4 !h-4" x-ic="'file'"></i></span>
+                          <div class="min-w-0">
+                            <template x-if="!d.editing"><div class="font-medium truncate max-w-[260px]" x-text="d.name"></div></template>
+                            <template x-if="d.editing"><input class="input !h-7 max-w-[240px]" x-model="d.name" @keydown.enter="d.editing=false" @blur="d.editing=false" :aria-label="'Rename ' + d.name" x-init="$nextTick(()=>$el.focus())"></template>
+                            <div class="text-xs text-mute" x-text="d.when"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="td"><span class="pill p-mute" x-text="d.fmt"></span></td>
+                      <td class="td text-right num" x-text="d.size"></td>
+                      <td class="td text-right num" x-text="d.tables ?? '—'"></td>
+                      <td class="td min-w-[190px]">
+                        <span class="pill" :class="pill(d.status)" x-text="d.status"></span>
+                        <template x-if="d.progress!==null && d.progress<100 && d.status!=='Failed'"><div class="mt-1.5 h-1 rounded bg-sunk overflow-hidden w-36" role="progressbar" :aria-valuenow="Math.round(d.progress)"><div class="h-full bg-accent transition-all" :style="'width:'+d.progress+'%'"></div></div></template>
+                        <template x-if="d.error"><div class="text-xs text-bad mt-1 max-w-[260px]" x-text="d.error"></div></template>
+                      </td>
+                      <td class="td">
+                        <div class="flex justify-end gap-1.5">
+                          <button class="btn btn-sm" :disabled="d.status!=='Ready for Analysis'" @click="source=d.name; go('chat')">Analyze</button>
+                          <button class="btn btn-sm btn-ghost !px-2" @click="d.editing=true" :aria-label="'Rename ' + d.name">Rename</button>
+                          <button class="btn btn-sm btn-ghost !px-2 text-bad" x-show="!d.confirm" @click="d.confirm=true" :aria-label="'Delete ' + d.name">Delete</button>
+                          <template x-if="d.confirm"><span class="inline-flex gap-1.5"><button class="btn btn-sm btn-danger" @click="removeDataset(d)">Confirm</button><button class="btn btn-sm" @click="d.confirm=false">Cancel</button></span></template>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== REPORTS =============== -->
+      <template x-if="view==='reports'">
+        <div class="gutter py-6 max-w-[1120px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">Saved reports</h2><p class="text-mute mt-1">Snapshots of an analysis with its chart, table and SQL. Exports follow your access to the source.</p></div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="r in reports" :key="r.title">
+              <article class="card overflow-hidden flex flex-col">
+                <div class="h-24 bg-sunk border-b border-line px-4 pt-3" aria-hidden="true">
+                  <svg viewBox="0 0 200 60" class="w-full h-full" preserveAspectRatio="none"><path :d="r.spark" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+                </div>
+                <div class="p-4 flex-1 flex flex-col gap-1">
+                  <h3 class="text-[14px] font-semibold leading-snug" x-text="r.title"></h3>
+                  <div class="text-xs text-mute" x-text="r.source + ' · saved ' + r.saved"></div>
+                  <div class="mt-2 flex flex-wrap gap-1.5"><template x-for="t in r.tags"><span class="pill p-mute" x-text="t"></span></template></div>
+                </div>
+                <div class="px-4 pb-4 flex gap-2">
+                  <button class="btn btn-sm flex-1" @click="go('chat')">Open</button>
+                  <template x-for="f in ['CSV','PDF']"><button class="btn btn-sm" @click="toast(f + ' export queued')" x-text="f"></button></template>
+                </div>
+              </article>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== DASHBOARDS =============== -->
+      <template x-if="view==='dashboards'">
+        <div class="gutter py-6 max-w-[1120px] mx-auto rise">
+          <div class="flex flex-wrap items-end gap-3 mb-4">
+            <div><h2 class="h1">Dashboards</h2><p class="text-mute mt-1">Pin charts from any analysis. Rearrange them in edit mode.</p></div>
+            <div class="ml-auto flex gap-2">
+              <button class="btn" @click="toast('Share link created. Viewers need access to Trade Orders.')">Share</button>
+              <button class="btn" :class="editDash && 'btn-primary'" @click="editDash=!editDash" x-text="editDash ? 'Done' : 'Edit layout'"></button>
+            </div>
+          </div>
+          <div class="flex gap-1 border-b border-line mb-4"><button class="tab tab-on">Sales overview</button><button class="tab" @click="toast('Operations dashboard opens here')">Operations</button><button class="tab" @click="toast('New dashboard created')">+ New</button></div>
+          <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <template x-for="(w,i) in widgets" :key="w.id">
+              <section class="card overflow-hidden" :class="w.span">
+                <div class="px-4 pt-3 flex items-start gap-2">
+                  <div class="min-w-0"><h3 class="text-[13px] font-medium" x-text="w.title"></h3><div class="text-xs text-mute" x-text="w.sub"></div></div>
+                  <div class="ml-auto flex gap-1" x-show="editDash">
+                    <button class="btn btn-sm !px-2" :disabled="i===0" @click="move(i,-1)" aria-label="Move earlier">←</button>
+                    <button class="btn btn-sm !px-2" :disabled="i===widgets.length-1" @click="move(i,1)" aria-label="Move later">→</button>
+                    <button class="btn btn-sm !px-2 btn-danger" @click="widgets.splice(i,1)" aria-label="Remove"><i class="i !w-4 !h-4" x-ic="'x'"></i></button>
+                  </div>
+                </div>
+                <template x-if="w.kpi"><div class="px-4 pb-4 pt-1"><div class="font-display text-[34px] font-semibold num leading-none" x-text="w.kpi.v"></div><div class="text-xs mt-1.5 num" :class="w.kpi.up ? 'text-good' : 'text-mute'" x-text="w.kpi.d"></div></div></template>
+                <template x-if="w.chart"><div class="h-[230px] px-2 pb-2" x-chart="w.chart"></div></template>
+              </section>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== USAGE =============== -->
+      <template x-if="view==='usage'">
+        <div class="gutter py-6 max-w-[1120px] mx-auto rise">
+          <div class="flex flex-wrap items-end gap-3 mb-5"><div><h2 class="h1">Usage</h2><p class="text-mute mt-1">Team plan · resets on 1 November</p></div><span class="pill p-info ml-auto">Limits are enforced on the server</span></div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <template x-for="u in usage" :key="u.l">
+              <div class="card p-4">
+                <div class="text-xs text-mute" x-text="u.l"></div>
+                <div class="mt-1 flex items-baseline gap-1.5"><span class="font-display text-[26px] font-semibold num leading-none" x-text="u.v"></span><span class="text-xs text-mute num" x-text="'of ' + u.max"></span></div>
+                <div class="mt-3 h-1.5 rounded bg-sunk overflow-hidden" role="progressbar" :aria-valuenow="u.pct" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded" :class="u.pct>85 ? 'bg-warn' : 'bg-accent'" :style="'width:'+u.pct+'%'"></div></div>
+              </div>
+            </template>
+          </div>
+          <div class="card mt-4 overflow-hidden">
+            <div class="px-4 pt-3"><h3 class="text-[13px] font-medium">AI requests, last 14 days</h3><div class="text-xs text-mute">Failed queries are not counted against your quota.</div></div>
+            <div class="h-[260px] px-2 pb-2" x-chart="usageChart"></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== ACCOUNT / SETTINGS =============== -->
+      <template x-if="view==='account'">
+        <div class="gutter py-6 max-w-[760px] mx-auto rise flex flex-col gap-4">
+          <div><h2 class="h1">Settings</h2><p class="text-mute mt-1">Profile, security and how answers are shown.</p></div>
+          <section class="card p-5">
+            <h3 class="h2 mb-4">Profile</h3>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div><label class="lbl" for="pn">Full name</label><input id="pn" class="input" value="Amara Nwosu"></div>
+              <div><label class="lbl" for="pe">Email</label><input id="pe" class="input" type="email" value="amara@tradecorp.example"></div>
+              <div><label class="lbl" for="po">Organization</label><input id="po" class="input" value="Trade Corp" disabled></div>
+              <div><label class="lbl" for="pt">Time zone</label><select id="pt" class="input"><option>Africa/Lagos (UTC+01:00)</option><option>UTC</option></select></div>
+            </div>
+            <div class="mt-4"><button class="btn btn-primary" @click="toast('Profile saved')">Save changes</button></div>
+          </section>
+          <section class="card p-5">
+            <h3 class="h2 mb-1">Answers</h3>
+            <template x-for="p in prefs" :key="p.k">
+              <div class="flex items-center gap-4 py-3 border-b border-line last:border-0">
+                <div class="flex-1 min-w-0"><div class="text-[13px] font-medium" x-text="p.l"></div><div class="text-xs text-mute" x-text="p.d"></div></div>
+                <button role="switch" :aria-checked="p.on" :aria-label="p.l" @click="p.on=!p.on" class="w-10 h-6 rounded-full p-0.5 transition-colors shrink-0" :class="p.on ? 'bg-accent' : 'bg-line'"><span class="block w-5 h-5 rounded-full bg-surface transition-transform" :class="p.on && 'translate-x-4'"></span></button>
+              </div>
+            </template>
+          </section>
+          <section class="card p-5">
+            <h3 class="h2 mb-3">Active sessions</h3>
+            <template x-for="s in sessions" :key="s.d">
+              <div class="flex items-center gap-3 py-2.5 border-b border-line last:border-0">
+                <div class="flex-1 min-w-0"><div class="text-[13px] font-medium" x-text="s.d"></div><div class="text-xs text-mute" x-text="s.w"></div></div>
+                <span class="pill p-good" x-show="s.cur">This device</span>
+                <button class="btn btn-sm" x-show="!s.cur" @click="sessions=sessions.filter(x=>x!==s); toast('Session revoked')">Revoke</button>
+              </div>
+            </template>
+          </section>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: OVERVIEW =============== -->
+      <template x-if="view==='admin-overview'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="flex flex-wrap items-end gap-3 mb-5">
+            <div><h2 class="h1">Platform overview</h2><p class="text-mute mt-1">Figures come from recorded activity. Last event 14 seconds ago.</p></div>
+            <div class="ml-auto flex items-center gap-2"><label for="rng" class="text-xs text-mute">Period</label><select id="rng" class="input !w-auto !h-8 text-xs" x-model.number="range"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></div>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <template x-for="k in adminKpis" :key="k.l">
+              <div class="card px-4 py-3">
+                <div class="text-xs text-mute" x-text="k.l"></div>
+                <div class="font-display text-[26px] font-semibold num leading-tight mt-0.5" x-text="k.v"></div>
+                <div class="text-xs num mt-0.5" :class="k.tone==='bad' ? 'text-bad' : k.tone==='good' ? 'text-good' : 'text-mute'" x-text="k.d"></div>
+              </div>
+            </template>
+          </div>
+          <div class="grid lg:grid-cols-3 gap-4 mt-4">
+            <section class="card overflow-hidden lg:col-span-2">
+              <div class="px-4 pt-3"><h3 class="text-[13px] font-medium">AI requests and failed queries</h3><div class="text-xs text-mute" x-text="'Daily, last ' + range + ' days'"></div></div>
+              <div class="h-[270px] px-2 pb-2" :key="range" x-chart="adminChart"></div>
+            </section>
+            <section class="card overflow-hidden">
+              <div class="px-4 pt-3"><h3 class="text-[13px] font-medium">Connection status</h3><div class="text-xs text-mute">9,742 registered</div></div>
+              <div class="h-[270px] px-2 pb-2" x-chart="connChart"></div>
+            </section>
+          </div>
+          <div class="grid lg:grid-cols-3 gap-4 mt-4">
+            <section class="card lg:col-span-2 overflow-hidden">
+              <div class="px-4 pt-3 pb-2 flex items-center"><h3 class="text-[13px] font-medium">Needs attention</h3><button class="btn btn-ghost btn-sm ml-auto" @click="go('admin-audit')">Open audit log</button></div>
+              <ul>
+                <template x-for="a in alerts" :key="a.t">
+                  <li class="px-4 py-2.5 border-t border-line flex items-start gap-3">
+                    <span class="pill mt-0.5" :class="a.tone" x-text="a.sev"></span>
+                    <div class="min-w-0 flex-1"><div class="text-[13px] font-medium" x-text="a.t"></div><div class="text-xs text-mute" x-text="a.d"></div></div>
+                    <span class="text-xs text-mute whitespace-nowrap" x-text="a.w"></span>
+                  </li>
+                </template>
+              </ul>
+            </section>
+            <section class="card overflow-hidden">
+              <div class="px-4 pt-3 pb-2 flex items-center"><h3 class="text-[13px] font-medium">Health</h3><button class="btn btn-ghost btn-sm ml-auto" @click="go('admin-health')">Details</button></div>
+              <ul>
+                <template x-for="h in health.slice(0,6)" :key="h.n">
+                  <li class="px-4 py-2 border-t border-line flex items-center gap-2 text-[13px]"><span class="w-2 h-2 rounded-full" :class="h.st==='Operational' ? 'bg-good' : 'bg-warn'"></span><span x-text="h.n"></span><span class="ml-auto text-xs text-mute num" x-text="h.m"></span></li>
+                </template>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: USERS =============== -->
+      <template x-if="view==='admin-users'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">Users and organizations</h2><p class="text-mute mt-1">Account metadata and usage only. Users' databases and conversations are not visible here.</p></div>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <div class="relative flex-1 min-w-[220px] max-w-sm"><i class="i !w-4 !h-4 absolute left-3 top-2.5 text-mute" x-ic="'search'"></i><label for="us" class="sr-only">Search users</label><input id="us" x-model="uq" class="input !pl-9" placeholder="Search name, email or organization"></div>
+            <label for="uf" class="sr-only">Status</label>
+            <select id="uf" x-model="uf" class="input !w-auto"><option value="">All statuses</option><option>Active</option><option>Suspended</option><option>Invited</option></select>
+          </div>
+          <div class="card overflow-hidden">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[900px]">
+                <thead><tr><th class="th">User</th><th class="th">Organization</th><th class="th">Plan</th><th class="th">Role</th><th class="th">Status</th><th class="th text-right">AI requests (30d)</th><th class="th">Last active</th><th class="th"></th></tr></thead>
+                <tbody>
+                  <template x-for="u in filteredUsers" :key="u.e">
+                    <tr class="hover:bg-sunk">
+                      <td class="td"><div class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-full bg-accentsoft text-accent grid place-items-center text-[11px] font-semibold" x-text="u.n.split(' ').map(x=>x[0]).join('')"></span><div class="min-w-0"><div class="font-medium" x-text="u.n"></div><div class="text-xs text-mute" x-text="u.e"></div></div></div></td>
+                      <td class="td" x-text="u.org"></td>
+                      <td class="td"><span class="pill p-mute" x-text="u.plan"></span></td>
+                      <td class="td text-mute" x-text="u.role"></td>
+                      <td class="td"><span class="pill" :class="pill(u.st)" x-text="u.st"></span></td>
+                      <td class="td text-right num" x-text="u.req.toLocaleString()"></td>
+                      <td class="td text-mute" x-text="u.last"></td>
+                      <td class="td">
+                        <div class="flex justify-end gap-1.5">
+                          <template x-if="!u.ask"><span class="inline-flex gap-1.5">
+                            <button class="btn btn-sm" x-show="u.st==='Active'" @click="u.ask='suspend'">Suspend</button>
+                            <button class="btn btn-sm" x-show="u.st==='Suspended'" @click="u.ask='reactivate'">Reactivate</button>
+                            <button class="btn btn-sm btn-ghost" @click="u.ask='revoke'">Revoke sessions</button>
+                          </span></template>
+                          <template x-if="u.ask"><span class="inline-flex gap-1.5 items-center"><span class="text-xs text-mute">Confirm <span x-text="u.ask"></span>?</span><button class="btn btn-sm btn-primary" @click="userAction(u)">Confirm</button><button class="btn btn-sm" @click="u.ask=null">Cancel</button></span></template>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="!filteredUsers.length"><tr><td colspan="8" class="td text-center text-mute py-10">No users match these filters.</td></tr></template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: SOURCES =============== -->
+      <template x-if="view==='admin-sources'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="mb-4"><h2 class="h1">Data sources</h2><p class="text-mute mt-1">Registry of connections and uploaded datasets across all accounts.</p></div>
+          <div class="card p-3 mb-4 flex gap-3 items-center text-[13px] text-mute"><i class="i text-accent" x-ic="'lock'"></i>Stored passwords and encryption keys cannot be revealed from this console. Diagnostics show sanitized errors only.</div>
+          <div class="flex gap-1 border-b border-line mb-4"><button class="tab" :class="srcTab==='c' && 'tab-on'" @click="srcTab='c'">Connections</button><button class="tab" :class="srcTab==='d' && 'tab-on'" @click="srcTab='d'">Datasets</button></div>
+
+          <div class="card overflow-hidden" x-show="srcTab==='c'">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[1000px]">
+                <thead><tr><th class="th">ID</th><th class="th">Name</th><th class="th">Owner</th><th class="th">Type</th><th class="th">Status</th><th class="th">Last success</th><th class="th">Last failure</th><th class="th">Recent error</th><th class="th"></th></tr></thead>
+                <tbody>
+                  <template x-for="c in regConns" :key="c.id">
+                    <tr class="hover:bg-sunk">
+                      <td class="td font-mono text-xs text-mute" x-text="c.id"></td>
+                      <td class="td font-medium" x-text="c.name"></td>
+                      <td class="td"><div x-text="c.owner"></div><div class="text-xs text-mute" x-text="c.org"></div></td>
+                      <td class="td" x-text="c.type"></td>
+                      <td class="td"><span class="pill" :class="pill(c.status)" x-text="c.status"></span></td>
+                      <td class="td text-mute" x-text="c.ok"></td>
+                      <td class="td text-mute" x-text="c.fail"></td>
+                      <td class="td text-xs text-mute max-w-[220px]" x-text="c.err || '—'"></td>
+                      <td class="td"><div class="flex justify-end gap-1.5">
+                        <button class="btn btn-sm" @click="adminAct('Health check queued for ' + c.id, 'connection.health_check', c.id)">Health check</button>
+                        <button class="btn btn-sm" @click="c.status = c.status==='Disabled' ? 'Connected' : 'Disabled'; adminAct((c.status==='Disabled'?'Disabled ':'Re-enabled ') + c.id, c.status==='Disabled'?'connection.disable':'connection.enable', c.id)" x-text="c.status==='Disabled' ? 'Re-enable' : 'Disable'"></button>
+                      </div></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card overflow-hidden" x-show="srcTab==='d'">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[1000px]">
+                <thead><tr><th class="th">ID</th><th class="th">File</th><th class="th">Owner</th><th class="th">Format</th><th class="th text-right">Size</th><th class="th text-right">Tables</th><th class="th">Status</th><th class="th">Retention</th><th class="th"></th></tr></thead>
+                <tbody>
+                  <template x-for="d in regData" :key="d.id">
+                    <tr class="hover:bg-sunk">
+                      <td class="td font-mono text-xs text-mute" x-text="d.id"></td>
+                      <td class="td font-medium" x-text="d.file"></td>
+                      <td class="td"><div x-text="d.owner"></div><div class="text-xs text-mute" x-text="d.org"></div></td>
+                      <td class="td" x-text="d.fmt"></td>
+                      <td class="td text-right num" x-text="d.size"></td>
+                      <td class="td text-right num" x-text="d.tables ?? '—'"></td>
+                      <td class="td"><span class="pill" :class="pill(d.st)" x-text="d.st"></span><div class="text-xs text-bad mt-1 max-w-[220px]" x-show="d.err" x-text="d.err"></div></td>
+                      <td class="td text-mute" x-text="d.ret"></td>
+                      <td class="td"><div class="flex justify-end gap-1.5">
+                        <button class="btn btn-sm" x-show="d.st==='Failed'" @click="d.st='Processing'; adminAct('Retry queued for ' + d.id, 'dataset.retry', d.id)">Retry</button>
+                        <button class="btn btn-sm" x-show="d.st==='Importing'||d.st==='Processing'" @click="d.st='Failed'; d.err='Cancelled by administrator'; adminAct('Cancelled job for ' + d.id, 'dataset.cancel', d.id)">Cancel</button>
+                        <button class="btn btn-sm btn-danger" x-show="d.st!=='Disabled'" @click="d.st='Disabled'; adminAct('Access disabled for ' + d.id, 'dataset.disable', d.id)">Disable</button>
+                      </div></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: AI & PLANS =============== -->
+      <template x-if="view==='admin-ai'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise flex flex-col gap-4">
+          <div><h2 class="h1">AI service and plans</h2><p class="text-mute mt-1">Changing the model never bypasses query validation or read-only enforcement.</p></div>
+          <div class="grid lg:grid-cols-5 gap-4">
+            <section class="card p-5 lg:col-span-3">
+              <div class="flex items-center gap-2 mb-4"><h3 class="h2">Provider</h3><span class="pill p-good ml-auto"><span class="w-1.5 h-1.5 rounded-full bg-good"></span>Available · median 1.4 s</span></div>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div><label class="lbl" for="ap">AI provider</label><select id="ap" class="input" x-model="ai.provider"><option>OpenAI</option></select></div>
+                <div><label class="lbl" for="am">Default model</label><select id="am" class="input" x-model="ai.model"><option>gpt-4.1</option><option>gpt-4.1-mini</option><option>o4-mini</option></select></div>
+                <div class="sm:col-span-2"><label class="lbl" for="ak">API key</label>
+                  <div class="flex gap-2"><input id="ak" class="input font-mono" value="sk-••••••••••••••••••••••a91F" readonly><button class="btn" @click="adminAct('API key rotation started','ai.key_rotate','openai')">Rotate</button></div>
+                  <p class="text-xs text-mute mt-1">Stored encrypted. The full key is never shown after saving.</p></div>
+                <div><label class="lbl" for="mo">Max output tokens</label><input id="mo" type="number" class="input num" x-model.number="ai.maxOut"></div>
+                <div><label class="lbl" for="mt">Request timeout (s)</label><input id="mt" type="number" class="input num" x-model.number="ai.timeout"></div>
+                <div><label class="lbl" for="mr">Retry limit</label><input id="mr" type="number" class="input num" x-model.number="ai.retries"></div>
+                <div><label class="lbl" for="mu">Requests per user per day</label><input id="mu" type="number" class="input num" x-model.number="ai.perUser"></div>
+              </div>
+              <div class="mt-4 flex items-center gap-3"><button class="btn btn-primary" @click="adminAct('AI settings saved','settings.update','ai')">Save settings</button><span class="text-xs text-mute">Changes are validated and logged.</span></div>
+            </section>
+            <section class="card overflow-hidden lg:col-span-2">
+              <div class="px-5 pt-4"><h3 class="h2">Estimated cost</h3><div class="text-xs text-mute">October to date, by model</div></div>
+              <div class="h-[250px] px-2" x-chart="costChart"></div>
+              <div class="px-5 pb-4 flex items-baseline gap-2"><span class="font-display text-[26px] font-semibold num">$3,842</span><span class="text-xs text-mute">of $5,000 monthly budget</span></div>
+            </section>
+          </div>
+          <section class="card overflow-hidden">
+            <div class="px-5 pt-4 pb-3 flex items-center"><h3 class="h2">Plans and limits</h3><button class="btn btn-sm ml-auto" @click="adminAct('Plan limits saved','plan.update','all')">Save plans</button></div>
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[720px]">
+                <thead><tr><th class="th">Limit</th><template x-for="p in plans" :key="p.n"><th class="th" x-text="p.n"></th></template></tr></thead>
+                <tbody>
+                  <template x-for="(row,ri) in planRows" :key="row.k">
+                    <tr><td class="td font-medium" x-text="row.l"></td>
+                      <template x-for="p in plans" :key="p.n"><td class="td"><label class="sr-only" :for="'pl-'+p.n+row.k" x-text="row.l + ' for ' + p.n"></label><input :id="'pl-'+p.n+row.k" type="number" class="input num !h-8 !w-28" x-model.number="p[row.k]"></td></template>
+                    </tr>
+                  </template>
+                  <tr><td class="td font-medium">Subscribers</td><template x-for="p in plans" :key="p.n"><td class="td num text-mute" x-text="p.subs.toLocaleString()"></td></template></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: CONNECTORS =============== -->
+      <template x-if="view==='admin-connectors'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">Connectors</h2><p class="text-mute mt-1">A connector is listed as available only after it is implemented and tested.</p></div>
+          <div class="card overflow-hidden">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[820px]">
+                <thead><tr><th class="th">Connector</th><th class="th">Driver</th><th class="th">Status</th><th class="th text-right">Connections</th><th class="th text-right">Failure rate (7d)</th><th class="th">Max result rows</th><th class="th text-right">Enabled</th></tr></thead>
+                <tbody>
+                  <template x-for="c in connectors" :key="c.n">
+                    <tr :class="!c.impl && 'opacity-60'">
+                      <td class="td"><div class="flex items-center gap-2.5"><span class="w-8 h-8 rounded-md bg-sunk grid place-items-center text-mute"><i class="i !w-4 !h-4" x-ic="'db'"></i></span><span class="font-medium" x-text="c.n"></span></div></td>
+                      <td class="td font-mono text-xs text-mute" x-text="c.drv"></td>
+                      <td class="td"><span class="pill" :class="c.impl ? pill(c.on ? c.st : 'Disabled') : 'p-mute'" x-text="c.impl ? (c.on ? c.st : 'Disabled') : 'Not implemented'"></span></td>
+                      <td class="td text-right num" x-text="c.impl ? c.cnt.toLocaleString() : '—'"></td>
+                      <td class="td text-right num" :class="c.fr>3 && 'text-warn'" x-text="c.impl ? c.fr + '%' : '—'"></td>
+                      <td class="td num text-mute" x-text="c.impl ? '10,000' : '—'"></td>
+                      <td class="td text-right"><button role="switch" :disabled="!c.impl" :aria-checked="c.on" :aria-label="'Enable ' + c.n" @click="c.on=!c.on; adminAct((c.on?'Enabled ':'Disabled ') + c.n + ' connector','connector.toggle',c.n)" class="w-10 h-6 rounded-full p-0.5 transition-colors disabled:opacity-40" :class="c.on && c.impl ? 'bg-accent' : 'bg-line'"><span class="block w-5 h-5 rounded-full bg-surface transition-transform" :class="c.on && c.impl && 'translate-x-4'"></span></button></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="text-xs text-mute mt-3">Disabling a connector blocks new connections of that type. Existing connections keep working for 7 days, then move to Disconnected.</p>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: AUDIT =============== -->
+      <template x-if="view==='admin-audit'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">Audit log</h2><p class="text-mute mt-1">Append-only. Passwords, API keys and encryption keys are never written here.</p></div>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <div class="relative flex-1 min-w-[220px] max-w-sm"><i class="i !w-4 !h-4 absolute left-3 top-2.5 text-mute" x-ic="'search'"></i><label for="aq" class="sr-only">Search audit log</label><input id="aq" x-model="aq" class="input !pl-9" placeholder="Search actor, event or target"></div>
+            <label for="ac" class="sr-only">Category</label>
+            <select id="ac" x-model="ac" class="input !w-auto"><option value="">All categories</option><option>Authentication</option><option>Admin action</option><option>Connection</option><option>Upload</option><option>Query</option><option>Configuration</option></select>
+          </div>
+          <div class="card overflow-hidden">
+            <div class="overflow-x-auto scroll-thin">
+              <table class="w-full text-[13px] min-w-[860px]">
+                <thead><tr><th class="th">Time</th><th class="th">Actor</th><th class="th">Category</th><th class="th">Event</th><th class="th">Target</th><th class="th">Outcome</th><th class="th">IP</th></tr></thead>
+                <tbody>
+                  <template x-for="a in filteredAudit" :key="a.id">
+                    <tr class="hover:bg-sunk">
+                      <td class="td text-mute whitespace-nowrap num" x-text="a.t"></td>
+                      <td class="td" x-text="a.a"></td>
+                      <td class="td"><span class="pill p-mute" x-text="a.c"></span></td>
+                      <td class="td font-mono text-xs" x-text="a.e"></td>
+                      <td class="td font-mono text-xs text-mute" x-text="a.g"></td>
+                      <td class="td"><span class="pill" :class="a.o==='Success' ? 'p-good' : a.o==='Denied' ? 'p-warn' : 'p-bad'" x-text="a.o"></span></td>
+                      <td class="td font-mono text-xs text-mute" x-text="a.ip"></td>
+                    </tr>
+                  </template>
+                  <template x-if="!filteredAudit.length"><tr><td colspan="7" class="td text-center text-mute py-10">No events match these filters.</td></tr></template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- =============== ADMIN: HEALTH =============== -->
+      <template x-if="view==='admin-health'">
+        <div class="gutter py-6 max-w-[1240px] mx-auto rise">
+          <div class="mb-5"><h2 class="h1">System health</h2><p class="text-mute mt-1">Checked every 30 seconds. Details never include secrets or internal hostnames.</p></div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <template x-for="h in health" :key="h.n">
+              <div class="card px-4 py-3">
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" :class="h.st==='Operational' ? 'bg-good' : 'bg-warn'"></span><span class="text-[13px] font-medium" x-text="h.n"></span></div>
+                <div class="font-display text-[22px] font-semibold num mt-1" x-text="h.m"></div>
+                <div class="text-xs" :class="h.st==='Operational' ? 'text-mute' : 'text-warn'" x-text="h.d"></div>
+              </div>
+            </template>
+          </div>
+          <div class="grid lg:grid-cols-5 gap-4 mt-4">
+            <section class="card overflow-hidden lg:col-span-2">
+              <div class="px-4 pt-3"><h3 class="text-[13px] font-medium">Queue depth</h3><div class="text-xs text-mute">Jobs waiting, last 24 hours</div></div>
+              <div class="h-[250px] px-2 pb-2" x-chart="queueChart"></div>
+            </section>
+            <section class="card overflow-hidden lg:col-span-3">
+              <div class="px-4 pt-3 pb-2"><h3 class="text-[13px] font-medium">Failed jobs</h3><div class="text-xs text-mute">Retries stop after 3 attempts to avoid duplicate processing.</div></div>
+              <div class="overflow-x-auto scroll-thin">
+                <table class="w-full text-[13px] min-w-[520px]">
+                  <thead><tr><th class="th">Job</th><th class="th">Error</th><th class="th text-right">Attempts</th><th class="th"></th></tr></thead>
+                  <tbody>
+                    <template x-for="j in jobs" :key="j.id">
+                      <tr>
+                        <td class="td"><div class="font-mono text-xs" x-text="j.id"></div><div class="text-xs text-mute" x-text="j.t"></div></td>
+                        <td class="td text-xs text-mute max-w-[240px]" x-text="j.e"></td>
+                        <td class="td text-right num" x-text="j.a + ' / 3'"></td>
+                        <td class="td text-right"><button class="btn btn-sm" :disabled="j.a>=3 || j.q" @click="j.q=true; j.a++; adminAct('Retry queued for ' + j.id,'job.retry',j.id)" x-text="j.a>=3 ? 'Limit reached' : j.q ? 'Queued' : 'Retry'"></button></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+      </template>
+
+    </main>
+  </div>
+
+  <!-- ============ SCHEMA DRAWER ============ -->
+  <template x-if="schemaFor">
+    <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Schema browser">
+      <div class="absolute inset-0" style="background:rgba(8,14,12,.5)" @click="schemaFor=null"></div>
+      <div class="relative w-[480px] max-w-full h-full bg-surface border-l border-line flex flex-col rise" style="padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)">
+        <div class="h-14 px-4 border-b border-line flex items-center gap-3 shrink-0">
+          <div class="min-w-0"><div class="eyebrow leading-none">Schema</div><div class="font-display font-semibold truncate" x-text="schemaFor.name"></div></div>
+          <button class="btn btn-ghost !px-2 ml-auto" @click="schemaFor=null" aria-label="Close"><i class="i" x-ic="'x'"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto scroll-thin p-4 flex flex-col gap-3">
+          <div class="flex flex-wrap gap-1.5 text-xs"><span class="pill p-mute num">4 of 23 tables shown</span><span class="pill p-good">Verified foreign key</span><span class="pill p-warn">Inferred relationship</span></div>
+          <template x-for="t in schema" :key="t.n">
+            <div class="card overflow-hidden">
+              <div class="px-3 h-10 flex items-center gap-2 bg-sunk border-b border-line"><i class="i !w-4 !h-4 text-mute" x-ic="'table'"></i><span class="font-mono text-[13px] font-medium" x-text="t.n"></span><span class="ml-auto text-xs text-mute num" x-text="t.rows + ' rows'"></span></div>
+              <ul>
+                <template x-for="c in t.c" :key="c.n"><li class="px-3 py-1.5 flex items-center gap-2 text-[13px] border-b border-line last:border-0">
+                  <span class="font-mono text-xs" x-text="c.n"></span>
+                  <span class="pill p-info" x-show="c.k==='PK'">PK</span>
+                  <span class="pill p-good" x-show="c.k==='FK'" x-text="'FK → ' + c.r"></span>
+                  <span class="pill p-warn" x-show="c.k==='INF'" x-text="'Inferred → ' + c.r"></span>
+                  <span class="ml-auto font-mono text-[11px] text-mute" x-text="c.t"></span>
+                </li></template>
+              </ul>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ CONNECT MODAL ============ -->
+  <template x-if="nc.open">
+    <div class="fixed inset-0 z-50 grid place-items-center p-4 gutter" role="dialog" aria-modal="true" aria-label="Connect a database">
+      <div class="absolute inset-0" style="background:rgba(8,14,12,.5)" @click="nc.open=false"></div>
+      <div class="relative card w-full max-w-[720px] max-h-full flex flex-col rise shadow-xl">
+        <div class="px-5 h-14 border-b border-line flex items-center shrink-0"><h2 class="h2">Connect a database</h2><button class="btn btn-ghost !px-2 ml-auto" @click="nc.open=false" aria-label="Close"><i class="i" x-ic="'x'"></i></button></div>
+        <div class="p-5 overflow-y-auto scroll-thin grid md:grid-cols-5 gap-6">
+          <div class="md:col-span-3 flex flex-col gap-4">
+            <div>
+              <div class="lbl">Database type</div>
+              <div class="grid grid-cols-3 sm:grid-cols-5 gap-2" role="radiogroup" aria-label="Database type">
+                <template x-for="t in dbTypes" :key="t.n"><button role="radio" :aria-checked="nc.type===t.n" class="h-14 rounded-md border text-xs font-medium flex flex-col items-center justify-center gap-0.5" :class="nc.type===t.n ? 'border-accent bg-accentsoft text-accent' : 'border-line hover:bg-sunk'" @click="pickType(t)"><i class="i !w-4 !h-4" x-ic="'db'"></i><span x-text="t.n"></span></button></template>
+              </div>
+            </div>
+            <template x-if="nc.type==='SQLite'">
+              <div class="rounded-md bg-infosoft text-info p-3 text-[13px]">SQLite databases are files, so they are uploaded instead of connected. <button class="underline font-medium" @click="nc.open=false; go('datasets')">Go to uploads</button></div>
+            </template>
+            <template x-if="nc.type!=='SQLite'">
+              <form class="grid grid-cols-2 gap-3" @submit.prevent="runTest()">
+                <div class="col-span-2"><label class="lbl" for="n1">Connection name</label><input id="n1" class="input" x-model="nc.name" placeholder="Warehouse Inventory"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n2">Host</label><input id="n2" class="input font-mono" x-model="nc.host" placeholder="db.example.com"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n3">Port</label><input id="n3" class="input font-mono num" x-model="nc.port"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n4">Database</label><input id="n4" class="input font-mono" x-model="nc.db"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n5">Username</label><input id="n5" class="input font-mono" x-model="nc.user" autocomplete="off"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n6">Password</label><input id="n6" type="password" class="input" x-model="nc.pass" autocomplete="new-password"></div>
+                <div class="col-span-2 sm:col-span-1"><label class="lbl" for="n7">Encryption</label><select id="n7" class="input" x-model="nc.ssl"><option>Require TLS</option><option>Verify CA certificate</option></select></div>
+                <div class="col-span-2 flex gap-2 pt-1"><button type="submit" class="btn btn-primary" :disabled="nc.state==='running'" x-text="nc.state==='running' ? 'Checking…' : 'Test and connect'"></button><button type="button" class="btn" @click="nc.host='10.0.4.12'">Try a private address</button></div>
+              </form>
+            </template>
+          </div>
+          <div class="md:col-span-2">
+            <div class="lbl">Connection checks</div>
+            <ol class="flex flex-col gap-2.5">
+              <template x-for="(s,i) in nc.steps" :key="s.l">
+                <li class="flex items-start gap-2.5 text-[13px]">
+                  <span class="w-5 h-5 mt-0.5 rounded-full grid place-items-center shrink-0 text-[10px] font-semibold" :class="s.s==='ok' ? 'bg-goodsoft text-good' : s.s==='fail' ? 'bg-badsoft text-bad' : s.s==='run' ? 'bg-infosoft text-info' : 'bg-sunk text-mute'">
+                    <template x-if="s.s==='ok'"><i class="i !w-3 !h-3" x-ic="'check'"></i></template>
+                    <template x-if="s.s==='fail'"><i class="i !w-3 !h-3" x-ic="'x'"></i></template>
+                    <template x-if="s.s==='run' || s.s==='idle'"><span x-text="i+1"></span></template>
+                  </span>
+                  <span :class="s.s==='idle' ? 'text-mute' : ''" x-text="s.l"></span>
+                </li>
+              </template>
+            </ol>
+            <template x-if="nc.msg"><div class="mt-4 rounded-md p-3 text-[13px]" :class="nc.state==='ok' ? 'bg-goodsoft text-good' : 'bg-badsoft text-bad'" x-text="nc.msg"></div></template>
+            <template x-if="nc.state==='ok'"><button class="btn btn-primary w-full mt-3" @click="saveConn()">Save connection</button></template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ TOASTS ============ -->
+  <div class="fixed z-[60] flex flex-col gap-2 items-end pointer-events-none" style="right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px))" aria-live="polite">
+    <template x-for="t in toasts" :key="t.id">
+      <div class="rise pointer-events-auto flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-[13px] shadow-lg max-w-[340px]" style="background:var(--ink);color:var(--bg)"><i class="i !w-4 !h-4" x-ic="'check'"></i><span x-text="t.m"></span></div>
+    </template>
+  </div>
+</div>
+
+<script>
+/* ---------- charts ---------- */
+const charts = new Set();
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  return { ink: g('--ink'), mute: g('--mute'), line: g('--line'), surface: g('--surface'),
+    cat: [g('--c1'), g('--c2'), g('--c3'), g('--c4'), g('--c5')] };
+}
+function fmtV(s, v) {
+  if (v == null) return '';
+  if (s.fmt === '$k') return v >= 1000 ? '$' + (v / 1000).toFixed(2) + 'M' : '$' + v + 'k';
+  if (s.fmt === '$') return '$' + Number(v).toLocaleString();
+  if (s.fmt === '%') return v + '%';
+  return Number(v).toLocaleString();
+}
+function buildOption(s, t) {
+  const f = v => fmtV(s, v), multi = s.series.length > 1;
+  const common = { animationDuration: 350, textStyle: { fontFamily: 'IBM Plex Sans, system-ui, sans-serif', color: t.mute },
+    tooltip: { trigger: s.kind === 'doughnut' ? 'item' : 'axis', backgroundColor: t.surface, borderColor: t.line, borderWidth: 1,
+      textStyle: { color: t.ink, fontSize: 12 }, valueFormatter: f, axisPointer: { type: 'line', lineStyle: { color: t.line } } } };
+  if (s.kind === 'doughnut') {
+    return { ...common,
+      legend: { orient: 'vertical', right: 8, top: 'center', icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { color: t.ink, fontSize: 12 }, formatter: n => n },
+      series: [{ type: 'pie', radius: ['56%', '80%'], center: ['34%', '50%'], itemStyle: { borderColor: t.surface, borderWidth: 2 }, label: { show: false },
+        data: s.x.map((n, i) => ({ name: n, value: s.series[0].data[i], itemStyle: { color: t.cat[i % t.cat.length] } })) }] };
+  }
+  const horiz = s.kind === 'hbar';
+  const axisCat = { type: 'category', data: s.x, axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false }, axisLabel: { color: t.mute, fontSize: 11 }, inverse: horiz };
+  const axisVal = { type: 'value', splitLine: { lineStyle: { color: t.line, type: 'dashed' } }, axisLabel: { color: t.mute, fontSize: 11, formatter: f } };
+  const series = s.series.map((d, i) => {
+    const color = d.muted ? t.mute : t.cat[i % t.cat.length];
+    const base = { name: d.name, data: d.data, itemStyle: { color }, lineStyle: { color, width: 2.2, type: d.muted ? 'dashed' : 'solid' } };
+    if (s.kind === 'bar' || horiz) return { ...base, type: 'bar', barMaxWidth: 28, itemStyle: { color, borderRadius: horiz ? [0, 3, 3, 0] : [3, 3, 0, 0] } };
+    const last = d.data.length - 1;
+    return { ...base, type: 'line', symbol: 'circle', symbolSize: (v, p) => (p.dataIndex === last && !d.muted ? 8 : 0), showSymbol: true,
+      areaStyle: s.kind === 'area' ? { color, opacity: 0.12 } : undefined, emphasis: { focus: 'series' } };
+  });
+  return { ...common,
+    legend: multi ? { top: 0, left: 8, icon: 'roundRect', itemWidth: 10, itemHeight: 3, textStyle: { color: t.mute, fontSize: 12 } } : undefined,
+    grid: { left: 8, right: 16, top: multi ? 34 : 14, bottom: 4, containLabel: true },
+    xAxis: horiz ? axisVal : axisCat, yAxis: horiz ? axisCat : axisVal, series };
+}
+function refreshCharts() {
+  const t = tok();
+  charts.forEach(c => { if (!c.el.isConnected) { charts.delete(c); c.inst.dispose(); return; } c.render(t); });
+}
+
+document.addEventListener('alpine:init', () => {
+  Alpine.directive('ic', (el, { expression }, { evaluate, effect }) => {
+    effect(() => { const n = evaluate(expression); el.innerHTML = n ? svg(n) : ''; });
+  });
+  Alpine.directive('chart', (el, { expression }, { evaluate, effect, cleanup }) => {
+    const inst = echarts.init(el, null, { renderer: 'svg' });
+    const entry = { inst, el, render: t => inst.setOption(buildOption(evaluate(expression), t || tok()), true) };
+    charts.add(entry);
+    effect(() => entry.render());
+    const ro = new ResizeObserver(() => inst.resize()); ro.observe(el);
+    cleanup(() => { ro.disconnect(); charts.delete(entry); inst.dispose(); });
+  });
+});
+
+/* ---------- icons ---------- */
+const ICONS = {
+  home:'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', sparkle:'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',
+  db:'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6',
+  upload:'M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3', file:'M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5',
+  grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', usage:'M4 19a8 8 0 1 1 16 0M12 19l4-6',
+  sliders:'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
+  users:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM21 20v-1a4 4 0 0 0-3-3.9M16 4.1a3.5 3.5 0 0 1 0 6.8',
+  shield:'M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3zM9 12l2 2 4-4', pulse:'M3 12h4l3-8 4 16 3-8h4',
+  log:'M5 4h14v16H5zM8 9h8M8 13h8M8 17h5', plug:'M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4',
+  cpu:'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4', plus:'M12 5v14M5 12h14',
+  search:'M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-4-4', send:'M4 12l16-8-6 16-3-7-7-1z',
+  sun:'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon:'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z', menu:'M4 6h16M4 12h16M4 18h16', x:'M6 6l12 12M18 6L6 18',
+  check:'M5 12l5 5 9-10', refresh:'M20 11a8 8 0 0 0-14.5-4M4 5v4h4M4 13a8 8 0 0 0 14.5 4M20 19v-4h-4',
+  code:'M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14', chevron:'M9 6l6 6-6 6', lock:'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3',
+  alert:'M12 4l9 16H3zM12 10v4M12 17h0', table:'M4 5h16v14H4zM4 10h16M10 5v14', chart:'M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6',
+  layers:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5', card:'M3 6h18v12H3zM3 10h18'
+};
+function svg(n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (ICONS[n] || '') + '"/></svg>'; }
+
+/* ---------- helpers ---------- */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+const REV26 = [468,455,539,562,598,641,629,688,716], REV25 = [412,438,501,476,529,563,547,604,631];
+function wave(n, base, amp, seed) { return Array.from({ length: n }, (_, i) => Math.max(0, Math.round(base + amp * Math.sin(i * 0.9 + seed) + amp * 0.5 * Math.cos(i * 0.37 + seed * 2)))); }
+function dayLabels(n) { const d = new Date(2026, 9, 28); return Array.from({ length: n }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() - (n - 1 - i)); return x.toLocaleDateString('en', { month: 'short', day: 'numeric' }); }); }
+function sparkPath(vals) { const mn = Math.min(...vals), mx = Math.max(...vals); return vals.map((v, i) => (i ? 'L' : 'M') + (i * 200 / (vals.length - 1)).toFixed(1) + ' ' + (52 - (v - mn) / (mx - mn || 1) * 44).toFixed(1)).join(' '); }
+
+function app() {
+  return {
+    view: 'home', admin: false, nav: false, isDark: false, drag: false, editDash: false,
+    titles: { home:'Home', chat:'New analysis', connections:'Database connections', datasets:'Uploaded datasets', reports:'Saved reports', dashboards:'Dashboards', usage:'Usage', account:'Settings',
+      'admin-overview':'Overview', 'admin-users':'Users and organizations', 'admin-sources':'Data sources', 'admin-ai':'AI service and plans', 'admin-connectors':'Connectors', 'admin-audit':'Audit log', 'admin-health':'System health' },
+    userNav: [ {k:'home',l:'Home',i:'home'}, {k:'chat',l:'New analysis',i:'sparkle'}, {k:'connections',l:'Connections',i:'plug'}, {k:'datasets',l:'Datasets',i:'upload'}, {k:'reports',l:'Saved reports',i:'file'}, {k:'dashboards',l:'Dashboards',i:'grid'}, {k:'usage',l:'Usage',i:'usage'}, {k:'account',l:'Settings',i:'sliders'} ],
+    adminNav: [ {k:'admin-overview',l:'Overview',i:'chart'}, {k:'admin-users',l:'Users and orgs',i:'users'}, {k:'admin-sources',l:'Data sources',i:'db'}, {k:'admin-ai',l:'AI and plans',i:'cpu'}, {k:'admin-connectors',l:'Connectors',i:'plug'}, {k:'admin-audit',l:'Audit log',i:'log'}, {k:'admin-health',l:'System health',i:'pulse',badge:'1'} ],
+    get items() { return this.admin ? this.adminNav : this.userNav; },
+
+    init() {
+      try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+      this.syncTheme();
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { this.syncTheme(); setTimeout(refreshCharts, 30); });
+      const route = () => { const h = location.hash.slice(1); if (this.titles[h]) { this.view = h; this.admin = h.startsWith('admin-'); } this.nav = false; };
+      window.addEventListener('hashchange', route); route();
+      this.messages = this.seed();
+      this.startPlaceholder();
+      this.$watch('source', () => { this.phShown = 0; });
+      this.$watch('view', () => { this.$nextTick(() => { const el = document.querySelector('main'); if (el) el.scrollTop = 0; if (this.view === 'chat') this.scrollThread(); }); });
+    },
+    go(v) { if (location.hash.slice(1) === v) { this.view = v; this.admin = v.startsWith('admin-'); this.nav = false; } else location.hash = v; },
+    syncTheme() { const a = document.documentElement.dataset.theme; this.isDark = a ? a === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; },
+    toggleTheme() { const next = this.isDark ? 'light' : 'dark'; document.documentElement.dataset.theme = next; try { localStorage.setItem('theme', next); } catch (e) {} this.syncTheme(); setTimeout(refreshCharts, 30); },
+
+    toasts: [], tid: 0,
+    toast(m) { const id = ++this.tid; this.toasts.push({ id, m }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 2600); },
+    pill(s) {
+      if (['Connected','Ready for Analysis','Operational','Active','Healthy','Success'].includes(s)) return 'p-good';
+      if (['Importing','Processing','Validating','Uploading','Connecting','Pending','Invited'].includes(s)) return 'p-info';
+      if (['Temporarily Unavailable','Permission Restricted','Degraded'].includes(s)) return 'p-warn';
+      if (['Failed','Authentication Failed','Connection Failed','Suspended','Down'].includes(s)) return 'p-bad';
+      return 'p-mute';
+    },
+    cell(v, c) { return c.fmt === '$' ? '$' + Number(v).toLocaleString() : c.fmt === '%' ? v + '%' : c.num ? Number(v).toLocaleString() : v; },
+    hl(sql) {
+      return sql.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/('[^']*')/g, '<span class="str">$1</span>')
+        .replace(/\b(SELECT|FROM|JOIN|LEFT|ON|WHERE|GROUP BY|ORDER BY|LIMIT|AS|SUM|COUNT|AVG|DATE_TRUNC|AND|BETWEEN|DESC|ASC|INTERVAL|EXTRACT|NULLIF|ROUND|COALESCE|IN|HAVING)\b/g, '<span class="kw">$1</span>')
+        .replace(/(--.*)$/gm, '<span class="cm">$1</span>');
+    },
+
+    /* ----- data sources ----- */
+    source: 'Trade Orders',
+    get sources() {
+      return [
+        ...this.conns.filter(c => c.tables).map(c => ({ name: c.name, kind: 'db', meta: c.type + ' · ' + c.tables + ' tables', status: c.status })),
+        ...this.datasets.map(d => ({ name: d.name, kind: 'file', meta: d.fmt + ' · ' + d.size, status: d.status })).filter(d => d.status === 'Ready for Analysis')
+      ];
+    },
+    suggestions: ['Which customers placed the most orders this year?', 'Show the distribution of orders by status', 'Which product categories grew fastest since 2025?', 'Identify unusual patterns in monthly refunds'],
+    history: [ { t:'Revenue by month, 2026', s:'Trade Orders', d:'Today' }, { t:'Orders stuck in processing', s:'Trade Orders', d:'Yesterday' }, { t:'Attendance by branch', s:'attendance_2026.xlsx', d:'Mon' }, { t:'Stock turnover by product', s:'Warehouse Inventory', d:'24 Oct' }, { t:'Student exam averages', s:'school_records.sqlite', d:'20 Oct' } ],
+    reports: [
+      { title:'Monthly revenue vs 2025', source:'Trade Orders', saved:'today', tags:['Chart','Table','SQL'], spark: sparkPath(REV26) },
+      { title:'Order status distribution', source:'Trade Orders', saved:'yesterday', tags:['Chart','SQL'], spark: sparkPath([6412,1208,764,391,138]) },
+      { title:'Stock turnover by product', source:'Warehouse Inventory', saved:'24 Oct', tags:['Table','SQL'], spark: sparkPath([4,7,5,9,12,10,14]) },
+      { title:'Attendance by branch', source:'attendance_2026.xlsx', saved:'Monday', tags:['Chart'], spark: sparkPath([88,91,86,93,90,95,92]) },
+      { title:'Top customers by order value', source:'Trade Orders', saved:'19 Oct', tags:['Table','SQL'], spark: sparkPath([30,26,24,19,17,15,12]) },
+      { title:'Refund anomalies, Q3', source:'Trade Orders', saved:'15 Oct', tags:['Chart','Anomaly'], spark: sparkPath([3,4,3,5,4,11,5,4]) }
+    ],
+
+    /* ----- connections ----- */
+    schemaFor: null,
+    conns: [
+      { id:'c1', name:'Trade Orders', type:'PostgreSQL 16', host:'db.tradecorp.example', status:'Connected', tables:23, checked:'2 min ago', refreshed:'Today 01:12' },
+      { id:'c2', name:'Warehouse Inventory', type:'MySQL 8', host:'inv.tradecorp.example', status:'Connected', tables:41, checked:'9 min ago', refreshed:'Yesterday' },
+      { id:'c3', name:'HR Attendance', type:'SQL Server 2022', host:'hr-sql.tradecorp.example', status:'Authentication Failed', tables:null, checked:'1 h ago', refreshed:'Never', error:'Login failed for the supplied user. Check the username and password, then test again.' },
+      { id:'c4', name:'Legacy Reports', type:'MariaDB 10.11', host:'legacy.tradecorp.example', status:'Temporarily Unavailable', tables:18, checked:'14 min ago', refreshed:'20 Oct', error:'The server did not respond within 10 seconds. It will be retried automatically.' }
+    ],
+    schema: [
+      { n:'customers', rows:'4,218', c:[ {n:'id',t:'bigint',k:'PK'}, {n:'name',t:'text'}, {n:'email',t:'text'}, {n:'city',t:'text'}, {n:'created_at',t:'timestamptz'} ] },
+      { n:'orders', rows:'8,913', c:[ {n:'id',t:'bigint',k:'PK'}, {n:'customer_id',t:'bigint',k:'FK',r:'customers.id'}, {n:'status',t:'text'}, {n:'total',t:'numeric(12,2)'}, {n:'ordered_at',t:'timestamptz'} ] },
+      { n:'order_items', rows:'31,406', c:[ {n:'id',t:'bigint',k:'PK'}, {n:'order_id',t:'bigint',k:'FK',r:'orders.id'}, {n:'product_id',t:'bigint',k:'INF',r:'products.id'}, {n:'quantity',t:'int'}, {n:'unit_price',t:'numeric(12,2)'} ] },
+      { n:'products', rows:'612', c:[ {n:'id',t:'bigint',k:'PK'}, {n:'name',t:'text'}, {n:'category',t:'text'}, {n:'sku',t:'text'} ] }
+    ],
+    nc: { open:false, type:'PostgreSQL', name:'', host:'', port:'5432', db:'', user:'', pass:'', ssl:'Require TLS', state:'idle', msg:'', steps:[] },
+    dbTypes: [ {n:'PostgreSQL',p:'5432'}, {n:'MySQL',p:'3306'}, {n:'MariaDB',p:'3306'}, {n:'SQL Server',p:'1433'}, {n:'SQLite',p:''} ],
+    stepLabels: ['Validate the details','Confirm you can add connections','Check the network destination','Open a connection with the driver','Verify read-only permissions','Read the permitted schema','Register the connection','Report the result'],
+    openConn() { this.nc = { open:true, type:'PostgreSQL', name:'', host:'', port:'5432', db:'', user:'', pass:'', ssl:'Require TLS', state:'idle', msg:'', steps: this.stepLabels.map(l => ({ l, s:'idle' })) }; },
+    pickType(t) { this.nc.type = t.n; this.nc.port = t.p; this.nc.state = 'idle'; this.nc.msg = ''; this.nc.steps.forEach(s => s.s = 'idle'); },
+    async runTest() {
+      const n = this.nc; n.msg = ''; n.state = 'running'; n.steps.forEach(s => s.s = 'idle');
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      const priv = /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/;
+      for (let i = 0; i < n.steps.length; i++) {
+        n.steps[i].s = 'run'; await wait(420);
+        let fail = '';
+        if (i === 0 && (!n.name.trim() || !n.host.trim() || !n.db.trim() || !n.user.trim() || !n.pass)) fail = 'Fill in the name, host, database, username and password.';
+        if (i === 2 && priv.test(n.host.trim())) fail = 'This address is private or internal, so connections to it are blocked. Use a public hostname for your database.';
+        if (fail) { n.steps[i].s = 'fail'; n.state = 'fail'; n.msg = fail; return; }
+        n.steps[i].s = 'ok';
+      }
+      n.state = 'ok'; n.msg = 'Connected. Found 27 tables, 4 views and 31 verified relationships. 3 more relationships were inferred from column names.';
+    },
+    saveConn() {
+      const n = this.nc;
+      this.conns.unshift({ id:'c' + Date.now(), name:n.name, type:n.type, host:n.host, status:'Connected', tables:27, checked:'just now', refreshed:'Just now' });
+      n.open = false; this.toast(n.name + ' connected'); this.audit('connection.create', n.name);
+    },
+    testConn(c) { c.busy = 'test'; setTimeout(() => { c.busy = null; if (c.status === 'Authentication Failed') this.toast('Still failing: check the credentials'); else { c.checked = 'just now'; this.toast(c.name + ' is reachable'); } }, 900); },
+    refreshSchema(c) { c.busy = 'refresh'; setTimeout(() => { c.busy = null; c.refreshed = 'Just now'; this.toast('Schema refreshed for ' + c.name); }, 1100); },
+    removeConn(c) { this.conns = this.conns.filter(x => x !== c); this.toast(c.name + ' removed'); },
+
+    /* ----- datasets ----- */
+    datasets: [
+      { id:'d1', name:'q3_sales_export.csv', fmt:'CSV', size:'48.2 MB', tables:1, status:'Ready for Analysis', progress:100, when:'Today 09:14' },
+      { id:'d2', name:'school_records.sqlite', fmt:'SQLite', size:'12.6 MB', tables:7, status:'Ready for Analysis', progress:100, when:'Yesterday' },
+      { id:'d3', name:'inventory_dump.sql', fmt:'SQL dump', size:'212 MB', tables:null, status:'Importing', progress:64, when:'Today 10:02' },
+      { id:'d4', name:'attendance_2026.xlsx', fmt:'Excel', size:'3.1 MB', tables:4, status:'Ready for Analysis', progress:100, when:'Monday' },
+      { id:'d5', name:'events.json', fmt:'JSON', size:'1.2 MB', tables:null, status:'Failed', progress:null, when:'20 Oct', error:'This is not valid JSON. The file ends unexpectedly at line 8,214.' }
+    ],
+    pick(files) { if (files && files[0]) this.addUpload(files[0].name, files[0].size / 1048576); },
+    addUpload(name, mb) {
+      const ext = (name.split('.').pop() || '').toLowerCase(), map = { csv:'CSV', xlsx:'Excel', json:'JSON', sqlite:'SQLite', db:'SQLite', sql:'SQL dump' };
+      const d = { id:'u' + Date.now(), name, fmt: map[ext] || ext.toUpperCase(), size: mb.toFixed(1) + ' MB', tables:null, status:'Uploading', progress:4, when:'Just now' };
+      this.datasets.unshift(d); const row = this.datasets[0];
+      if (!map[ext]) { setTimeout(() => { row.status = 'Failed'; row.progress = null; row.error = 'This format is not supported. Upload .sql, .sqlite, .db, .csv, .xlsx or .json.'; }, 500); return; }
+      const stages = [['Uploading', 25], ['Validating', 45], ['Processing', 70], ['Importing', 92], ['Ready for Analysis', 100]]; let i = 0;
+      const tick = () => { const [s, p] = stages[i]; row.status = s; row.progress = p; if (s === 'Ready for Analysis') { row.tables = ext === 'csv' ? 1 : 3; this.toast(name + ' is ready'); return; } i++; setTimeout(tick, 900); };
+      tick();
+    },
+    removeDataset(d) { this.datasets = this.datasets.filter(x => x !== d); this.toast('Dataset deleted. Stored files and temporary tables are being cleaned up.'); },
+
+    /* ----- dashboards ----- */
+    widgets: [
+      { id:'w1', span:'md:col-span-2', title:'Revenue YTD', sub:'Jan to Sep 2026', kpi:{ v:'$5.30M', d:'+12.7% vs 2025', up:true } },
+      { id:'w2', span:'md:col-span-2', title:'Orders YTD', sub:'All statuses', kpi:{ v:'8,913', d:'+9.4% vs 2025', up:true } },
+      { id:'w3', span:'md:col-span-2', title:'Average order value', sub:'Revenue ÷ orders', kpi:{ v:'$594.19', d:'+3.0% vs 2025', up:true } },
+      { id:'w4', span:'md:col-span-4', title:'Revenue by month', sub:'2026 against 2025, $ thousands', chart:{ kind:'line', fmt:'$k', x:MONTHS, series:[{ name:'2026', data:REV26 }, { name:'2025', data:REV25, muted:true }] } },
+      { id:'w5', span:'md:col-span-2', title:'Orders by status', sub:'Share of 8,913', chart:{ kind:'doughnut', fmt:'n', x:['Delivered','Shipped','Processing','Cancelled','Refunded'], series:[{ name:'Orders', data:[6412,1208,764,391,138] }] } },
+      { id:'w6', span:'md:col-span-6', title:'Revenue by category', sub:'September 2026, $ thousands', chart:{ kind:'hbar', fmt:'$k', x:['Fasteners','Cabling','Safety gear','Power tools','Fluid handling','Packaging'], series:[{ name:'Revenue', data:[214,167,126,98,71,40] }] } }
+    ],
+    move(i, d) { const a = this.widgets, j = i + d; [a[i], a[j]] = [a[j], a[i]]; },
+
+    /* ----- usage ----- */
+    usage: [ { l:'AI requests', v:'1,284', max:'2,000', pct:64 }, { l:'Storage', v:'3.4 GB', max:'10 GB', pct:34 }, { l:'Connections', v:'4', max:'5', pct:80 }, { l:'Concurrent analyses', v:'2', max:'3', pct:67 } ],
+    get usageChart() { return { kind:'bar', fmt:'n', x:dayLabels(14), series:[{ name:'Requests', data:wave(14, 92, 24, 1.3) }] }; },
+    prefs: [ { k:'sql', l:'Show generated SQL with each answer', d:'Lets you check how a number was calculated.', on:true }, { k:'tbl', l:'Open data tables by default', d:'Expands the table under each chart.', on:true }, { k:'sug', l:'Suggest follow-up questions', d:'Shown beneath each answer.', on:true } ],
+    sessions: [ { d:'Chrome on Windows', w:'Lagos, Nigeria · active now', cur:true }, { d:'Safari on iPhone', w:'Lagos, Nigeria · 2 days ago' }, { d:'Edge on Windows', w:'Abuja, Nigeria · 9 days ago' } ],
+
+    /* ----- chat ----- */
+    draft: '', messages: [], mid: 0, phShown: 0,
+    startPlaceholder() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { this.phShown = 99; return; }
+      let hold = 0;
+      setInterval(() => {
+        if (this.view !== 'chat' || this.draft) return;
+        const n = ('Ask a question about ' + this.source + '…').split(' ').length;
+        if (this.phShown < n) this.phShown++;
+        else if (++hold >= 9) { hold = 0; this.phShown = 0; }
+      }, 260);
+    },
+    newChat() { this.messages = []; this.history.unshift({ t:'New analysis', s:this.source, d:'Now' }); this.toast('Started a new analysis'); },
+    scrollThread() { this.$nextTick(() => { const t = document.getElementById('thread'); if (t) t.scrollTop = t.scrollHeight; }); },
+    ask(q) {
+      q = (q || '').trim(); if (!q) return;
+      if (this.view !== 'chat') this.go('chat');
+      this.draft = ''; this.messages.push({ id: ++this.mid, role:'user', text:q });
+      const typing = { id: ++this.mid, role:'typing', step:'Reading the schema…' }; this.messages.push(typing); this.scrollThread();
+      setTimeout(() => { typing.step = 'Writing and validating the query…'; }, 600);
+      setTimeout(() => { typing.step = 'Running it read-only…'; }, 1200);
+      setTimeout(() => { const i = this.messages.indexOf(typing); this.messages.splice(i, 1, this.respond(q)); this.scrollThread(); }, 1800);
+    },
+    respond(q) {
+      const s = q.toLowerCase(), base = { id: ++this.mid, role:'ai', source:this.source, fresh:'Queried just now' };
+      if (/profit|margin|cost/.test(s)) return { ...base, answer:'I can’t calculate profitability from Trade Orders, and I won’t estimate it. The database records what customers paid but not what the products cost.',
+        limit:{ found:['orders.total','order_items.unit_price','order_items.quantity'], missing:['A unit cost or purchase price for each product','Shipping or fulfilment costs per order'] },
+        follow:['Show revenue by product category','Show discounts given by month','Upload a cost sheet to combine with orders'] };
+      if (/return|repeat|retention|loyal|come back/.test(s)) return { ...base, ms:'0.67 s',
+        answer:'1,732 customers (60.3%) are returning buyers this year, meaning they placed two or more orders. The other 1,142 placed one. Returning customers average 4.5 orders each and account for 7,771 of the 8,913 orders.',
+        kpis:[ {l:'Returning customers',v:'1,732',d:'60.3% of 2,874 active',up:false}, {l:'One-time customers',v:'1,142',d:'39.7% of active',up:false}, {l:'Orders per returning customer',v:'4.5',d:'7,771 orders',up:false} ],
+        chart:{ kind:'bar', fmt:'n', title:'Customers who became repeat buyers', sub:'By the month of their second order · 2026', x:MONTHS, series:[{ name:'New repeat buyers', data:[142,138,171,183,196,214,209,226,253] }] },
+        table:{ cols:[{h:'Customer'},{h:'Orders',num:true},{h:'Revenue',num:true,fmt:'$'},{h:'Last order'}], rows:[['Apex Fabrication',41,128400,'26 Oct'],['Delta Rail Supply',37,112950,'27 Oct'],['Harbour Marine Works',34,98300,'24 Oct'],['Kano Builders Ltd',29,84720,'27 Oct'],['Lekki Site Services',27,79110,'25 Oct']] },
+        sql:"SELECT COUNT(*) AS returning_customers\nFROM (\n  SELECT customer_id\n  FROM orders\n  WHERE ordered_at >= '2026-01-01'\n  GROUP BY customer_id\n  HAVING COUNT(*) >= 2\n) repeat_buyers;",
+        note:'I counted a returning customer as anyone with two or more orders in 2026. If you mean customers who also ordered in 2025, ask and I will rerun it that way. The table shows the five most active returning customers.',
+        follow:['Count customers who ordered in both 2025 and 2026','Which returning customers have not ordered in 60 days?','Show revenue from returning vs one-time customers'] };
+      if (/status|distribution/.test(s)) return { ...base, ms:'0.31 s', answer:'Of 8,913 orders, 6,412 (71.9%) were delivered. 764 are still processing and 391 (4.4%) were cancelled.',
+        chart:{ kind:'doughnut', fmt:'n', title:'Orders by status', sub:'Year to date · 8,913 orders', x:['Delivered','Shipped','Processing','Cancelled','Refunded'], series:[{ name:'Orders', data:[6412,1208,764,391,138] }] },
+        table:{ cols:[{h:'Status'},{h:'Orders',num:true},{h:'Share',num:true,fmt:'%'}], rows:[['Delivered',6412,71.9],['Shipped',1208,13.6],['Processing',764,8.6],['Cancelled',391,4.4],['Refunded',138,1.5]] },
+        note:'Processing is high for this point in the month. If order intake is flat, it may mean fulfilment is falling behind. The data alone does not show the cause.',
+        sql:"SELECT status,\n       COUNT(*) AS orders,\n       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS share\nFROM orders\nWHERE ordered_at >= DATE_TRUNC('year', CURRENT_DATE)\nGROUP BY status\nORDER BY orders DESC;",
+        follow:['Which customers have the most cancelled orders?','Show processing orders older than 7 days'] };
+      if (/customer|client|buyer/.test(s)) return { ...base, ms:'0.58 s', answer:'Apex Fabrication placed the most orders this year with 41, followed by Delta Rail Supply with 37. The top five customers together placed 168 orders.',
+        chart:{ kind:'hbar', fmt:'n', title:'Customers by orders placed', sub:'Year to date · top 5', x:['Apex Fabrication','Delta Rail Supply','Harbour Marine Works','Kano Builders Ltd','Lekki Site Services'], series:[{ name:'Orders', data:[41,37,34,29,27] }] },
+        table:{ cols:[{h:'Customer'},{h:'Orders',num:true},{h:'Revenue',num:true,fmt:'$'}], rows:[['Apex Fabrication',41,128400],['Delta Rail Supply',37,112950],['Harbour Marine Works',34,98300],['Kano Builders Ltd',29,84720],['Lekki Site Services',27,79110]] },
+        sql:"SELECT c.name,\n       COUNT(o.id) AS orders,\n       SUM(o.total) AS revenue\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nWHERE o.ordered_at >= '2026-01-01'\nGROUP BY c.name\nORDER BY orders DESC\nLIMIT 5;",
+        follow:['How many customers are returning buyers?','Show the top 10 by revenue instead'] };
+      if (/product|categor|top/.test(s)) return { ...base, ms:'0.52 s', answer:'Fasteners led September with $214k, followed by Cabling at $167k. Together, the top two categories made up 53% of the $716k total.',
+        chart:{ kind:'hbar', fmt:'$k', title:'Revenue by category', sub:'September 2026 · $ thousands', x:['Fasteners','Cabling','Safety gear','Power tools','Fluid handling','Packaging'], series:[{ name:'Revenue', data:[214,167,126,98,71,40] }] },
+        table:{ cols:[{h:'Category'},{h:'Revenue',num:true,fmt:'$'},{h:'Share',num:true,fmt:'%'}], rows:[['Fasteners',214000,29.9],['Cabling',167000,23.3],['Safety gear',126000,17.6],['Power tools',98000,13.7],['Fluid handling',71000,9.9],['Packaging',40000,5.6]] },
+        sql:"SELECT p.category,\n       SUM(oi.quantity * oi.unit_price) AS revenue\nFROM order_items oi\nJOIN products p ON p.id = oi.product_id  -- inferred relationship\nJOIN orders o   ON o.id = oi.order_id\nWHERE o.ordered_at BETWEEN '2026-09-01' AND '2026-09-30'\nGROUP BY p.category\nORDER BY revenue DESC;",
+        note:'This query joins products using order_items.product_id, a relationship I inferred from column names rather than a declared foreign key. Totals match the monthly revenue figure.',
+        follow:['Show the same by month for 2026','Which category grew fastest since 2025?'] };
+      return { ...base, ms:'0.44 s', answer:'Revenue reached $716k in September, up 4.1% on August and 13.5% on September 2025.',
+        kpis:[ {l:'September revenue',v:'$716k',d:'+4.1% vs August',up:true}, {l:'Year to date',v:'$5.30M',d:'+12.7% vs 2025',up:true}, {l:'Best month',v:'Sep',d:'$716k',up:false} ],
+        chart:{ kind:'line', fmt:'$k', title:'Revenue by month', sub:'2026 · $ thousands', x:MONTHS, series:[{ name:'2026', data:REV26 }] },
+        sql:"SELECT DATE_TRUNC('month', ordered_at) AS month,\n       SUM(total) AS revenue\nFROM orders\nWHERE status <> 'Cancelled'\nGROUP BY 1\nORDER BY 1;", follow:['Compare it with last year','Break it down by category'] };
+    },
+    seed() {
+      const a = { id:1, role:'user', text:'Show revenue by month for 2026.' };
+      const b = { id:2, role:'ai', source:'Trade Orders', fresh:'Queried 02:41 · data as of 02:40', ms:'0.84 s',
+        answer:'Revenue reached $716k in September, up 4.1% on August. Year to date, Trade Orders has booked $5.30M, with every month above $450k.',
+        kpis:[ {l:'September revenue',v:'$716k',d:'+4.1% vs August',up:true}, {l:'Year to date',v:'$5.30M',d:'9 months',up:false}, {l:'Orders YTD',v:'8,913',d:'Avg $594.19',up:false} ],
+        chart:{ kind:'line', fmt:'$k', title:'Revenue by month', sub:'2026 · $ thousands', x:MONTHS, series:[{ name:'2026', data:REV26 }] },
+        table:{ cols:[{h:'Month'},{h:'Revenue',num:true,fmt:'$'},{h:'Orders',num:true}], rows: MONTHS.map((m, i) => [m, REV26[i] * 1000, [842,801,968,974,1032,1090,1068,1062,1076][i]]) },
+        sql:"SELECT DATE_TRUNC('month', ordered_at) AS month,\n       SUM(total)  AS revenue,\n       COUNT(*)    AS orders\nFROM orders\nWHERE ordered_at >= '2026-01-01'\n  AND status <> 'Cancelled'\nGROUP BY 1\nORDER BY 1;",
+        note:'Growth is steady rather than seasonal. The February dip is small and recovers in March.', follow:['Now compare it with last year','Show the same by product category'] };
+      const c = { id:3, role:'user', text:'Now compare it with last year.' };
+      const d = { id:4, role:'ai', source:'Trade Orders', fresh:'Queried 02:42', ms:'1.12 s',
+        answer:'2026 is ahead of 2025 in all nine months. Year to date revenue is $5.30M against $4.70M, a gain of 12.7%. April was the strongest comparison at +18.1%, and September came in at +13.5%.',
+        chart:{ kind:'line', fmt:'$k', title:'Revenue, 2026 against 2025', sub:'Monthly · $ thousands', x:MONTHS, series:[{ name:'2026', data:REV26 }, { name:'2025', data:REV25, muted:true }] },
+        sql:"SELECT EXTRACT(MONTH FROM ordered_at) AS month,\n       EXTRACT(YEAR FROM ordered_at)  AS year,\n       SUM(total) AS revenue\nFROM orders\nWHERE ordered_at >= '2025-01-01'\n  AND status <> 'Cancelled'\nGROUP BY 1, 2\nORDER BY 2, 1;",
+        note:'The lead over 2025 was +8.2% in Q1 and has held near +14% in Q2 and Q3. That points to a step up in spring rather than steadily accelerating growth, though the data does not say what caused it.', follow:['Show the same comparison by product','Why was July lower than June?'] };
+      this.mid = 4; return [a, b, c, d];
+    },
+
+    /* ----- admin ----- */
+    range: 30, srcTab: 'c', uq: '', uf: '', aq: '', ac: '',
+    get adminChart() { const n = Number(this.range); return { kind:'area', fmt:'n', x:dayLabels(n), series:[{ name:'AI requests', data:wave(n, 15800, 1900, 0.6) }, { name:'Failed queries', data:wave(n, 380, 90, 2.1) }] }; },
+    connChart: { kind:'doughnut', fmt:'n', x:['Connected','Failed','Unavailable','Disconnected'], series:[{ name:'Connections', data:[9431, 150, 87, 74] }] },
+    costChart: { kind:'bar', fmt:'$', x:['gpt-4.1','gpt-4.1-mini','o4-mini'], series:[{ name:'Cost', data:[2310, 962, 570] }] },
+    queueChart: { kind:'area', fmt:'n', x:Array.from({ length:24 }, (_, i) => String(i).padStart(2, '0') + ':00'), series:[{ name:'Jobs waiting', data:[12,9,8,6,5,7,14,28,41,52,47,44,39,46,58,63,51,44,36,29,24,19,15,37] }] },
+    get adminKpis() {
+      const k = this.range / 30;
+      return [
+        { l:'Registered users', v:'12,486', d:'+312 this week', tone:'good' }, { l:'Active users (30d)', v:'7,904', d:'63% of registered' },
+        { l:'Suspended accounts', v:'41', d:'3 this week' }, { l:'Organizations', v:'318', d:'+9 this month', tone:'good' },
+        { l:'AI requests', v:Math.round(482910 * k).toLocaleString(), d:'Tokens ' + (1.92 * k).toFixed(2) + 'B' }, { l:'Query failure rate', v:'2.4%', d:'−0.3 pts vs prior period', tone:'good' },
+        { l:'Estimated AI cost', v:'$' + Math.round(3842 * k).toLocaleString(), d:'77% of monthly budget' }, { l:'Storage used', v:'1.8 TB', d:'72% of 2.5 TB', tone:'bad' },
+        { l:'Registered connections', v:'9,742', d:'96.8% healthy' }, { l:'Failed connection attempts', v:Math.round(311 * k).toLocaleString(), d:'Top cause: authentication' },
+        { l:'Uploaded datasets', v:'6,115', d:'87 failed uploads' }, { l:'Background job failures', v:'14', d:'4 awaiting retry', tone:'bad' }
+      ];
+    },
+    alerts: [
+      { sev:'High', tone:'p-bad', t:'Storage approaching capacity', d:'Object storage is at 72% and growing 1.1% a week.', w:'12 min ago' },
+      { sev:'Medium', tone:'p-warn', t:'Worker w-04 restarting repeatedly', d:'1 of 6 import workers has restarted 5 times in an hour.', w:'31 min ago' },
+      { sev:'Medium', tone:'p-warn', t:'Repeated connection failures for org Northwind Ltd', d:'42 authentication failures across 3 connections since 07:10.', w:'2 h ago' },
+      { sev:'Low', tone:'p-info', t:'AI usage above forecast', d:'Requests are 9% over the 7-day average.', w:'5 h ago' }
+    ],
+    health: [
+      { n:'Backend API', st:'Operational', m:'182 ms', d:'p95 latency' }, { n:'Application database', st:'Operational', m:'4 ms', d:'Query time' },
+      { n:'Queue', st:'Operational', m:'37', d:'Jobs waiting' }, { n:'Import workers', st:'Degraded', m:'5 / 6', d:'w-04 restarting' },
+      { n:'AI provider', st:'Operational', m:'1.4 s', d:'Median response' }, { n:'Object storage', st:'Operational', m:'72%', d:'1.8 of 2.5 TB' },
+      { n:'Scheduler', st:'Operational', m:'0', d:'Missed runs today' }, { n:'Error rate', st:'Operational', m:'0.6%', d:'Last hour' }
+    ],
+    jobs: [
+      { id:'imp_7c21e', t:'SQL import · inventory_dump.sql', e:'Worker lost connection to the temporary database.', a:1 },
+      { id:'prof_91ab4', t:'Schema profiling · Legacy Reports', e:'Timed out after 120 s on table audit_events.', a:2 },
+      { id:'imp_5f03d', t:'Excel import · budget_fy26.xlsx', e:'Sheet “Q4” contains merged header cells.', a:3 },
+      { id:'rep_20d6e', t:'Scheduled report · Weekly sales', e:'Source connection was disabled.', a:1 }
+    ],
+    users: [
+      { n:'Chidi Okeke', e:'chidi@northwind.example', org:'Northwind Ltd', plan:'Business', st:'Active', role:'Organization admin', req:2184, last:'4 min ago' },
+      { n:'Fatima Bello', e:'fatima@brightpath.example', org:'Brightpath Academy', plan:'Team', st:'Active', role:'Member', req:842, last:'22 min ago' },
+      { n:'Tunde Adeyemi', e:'tunde@orbitlogistics.example', org:'Orbit Logistics', plan:'Business', st:'Active', role:'Member', req:1531, last:'1 h ago' },
+      { n:'Grace Eze', e:'grace.eze@example.com', org:'Individual', plan:'Free', st:'Active', role:'Member', req:96, last:'3 h ago' },
+      { n:'Ibrahim Musa', e:'ibrahim@kadunafoods.example', org:'Kaduna Foods', plan:'Team', st:'Suspended', role:'Member', req:0, last:'6 days ago' },
+      { n:'Ngozi Obi', e:'ngozi@harbourhealth.example', org:'Harbour Health', plan:'Business', st:'Active', role:'Organization admin', req:3120, last:'Just now' },
+      { n:'Samuel Danjuma', e:'sam.d@example.com', org:'Individual', plan:'Free', st:'Invited', role:'Member', req:0, last:'Never' },
+      { n:'Zainab Lawal', e:'zainab@tradecorp.example', org:'Trade Corp', plan:'Team', st:'Active', role:'Member', req:1284, last:'Today' }
+    ],
+    get filteredUsers() { const q = this.uq.toLowerCase(); return this.users.filter(u => (!this.uf || u.st === this.uf) && (!q || (u.n + u.e + u.org).toLowerCase().includes(q))); },
+    userAction(u) {
+      const a = u.ask; u.ask = null;
+      if (a === 'suspend') { u.st = 'Suspended'; this.audit('user.suspend', u.e); this.toast(u.n + ' suspended and signed out'); }
+      else if (a === 'reactivate') { u.st = 'Active'; this.audit('user.reactivate', u.e); this.toast(u.n + ' reactivated'); }
+      else { this.audit('user.revoke_sessions', u.e); this.toast('Sessions revoked for ' + u.n); }
+    },
+    regConns: [
+      { id:'conn_8f2a41', name:'Trade Orders', owner:'Zainab Lawal', org:'Trade Corp', type:'PostgreSQL', status:'Connected', ok:'2 min ago', fail:'12 days ago', err:'' },
+      { id:'conn_3b19c7', name:'Patient Visits', owner:'Ngozi Obi', org:'Harbour Health', type:'SQL Server', status:'Connected', ok:'6 min ago', fail:'Never', err:'' },
+      { id:'conn_a77d02', name:'Fleet Tracking', owner:'Tunde Adeyemi', org:'Orbit Logistics', type:'MySQL', status:'Temporarily Unavailable', ok:'3 h ago', fail:'14 min ago', err:'Timed out after 10 s' },
+      { id:'conn_5c8e90', name:'Supplier Ledger', owner:'Chidi Okeke', org:'Northwind Ltd', type:'MariaDB', status:'Authentication Failed', ok:'9 days ago', fail:'1 h ago', err:'Login failed for supplied user (42 attempts today)' },
+      { id:'conn_e40b16', name:'Staging copy', owner:'Grace Eze', org:'Individual', type:'PostgreSQL', status:'Permission Restricted', ok:'2 days ago', fail:'2 days ago', err:'User has write permission. Read-only access is required.' }
+    ],
+    regData: [
+      { id:'ds_91a3f0', file:'q3_sales_export.csv', owner:'Zainab Lawal', org:'Trade Corp', fmt:'CSV', size:'48.2 MB', tables:1, st:'Ready for Analysis', ret:'Keep 90 days', err:'' },
+      { id:'ds_6be2d8', file:'inventory_dump.sql', owner:'Tunde Adeyemi', org:'Orbit Logistics', fmt:'SQL dump', size:'212 MB', tables:null, st:'Importing', ret:'Keep 90 days', err:'' },
+      { id:'ds_44c0a1', file:'budget_fy26.xlsx', owner:'Chidi Okeke', org:'Northwind Ltd', fmt:'Excel', size:'6.8 MB', tables:null, st:'Failed', ret:'Keep 30 days', err:'Sheet “Q4” contains merged header cells.' },
+      { id:'ds_b2e7f3', file:'school_records.sqlite', owner:'Fatima Bello', org:'Brightpath Academy', fmt:'SQLite', size:'12.6 MB', tables:7, st:'Ready for Analysis', ret:'Keep 180 days', err:'' }
+    ],
+    ai: { provider:'OpenAI', model:'gpt-4.1', maxOut:2048, timeout:45, retries:2, perUser:200 },
+    planRows: [ { k:'ai', l:'AI requests per month' }, { k:'conn', l:'Database connections' }, { k:'upl', l:'Max upload size (MB)' }, { k:'store', l:'Storage (GB)' }, { k:'conc', l:'Concurrent analyses' }, { k:'qt', l:'Query timeout (s)' }, { k:'rows', l:'Max result rows' } ],
+    plans: [
+      { n:'Free', ai:100, conn:1, upl:25, store:1, conc:1, qt:15, rows:1000, subs:8142 },
+      { n:'Team', ai:2000, conn:5, upl:250, store:10, conc:3, qt:30, rows:10000, subs:3340 },
+      { n:'Business', ai:10000, conn:25, upl:1024, store:100, conc:10, qt:60, rows:50000, subs:1004 }
+    ],
+    connectors: [
+      { n:'PostgreSQL', drv:'pgsql 16', impl:true, on:true, st:'Operational', cnt:4120, fr:1.8 },
+      { n:'MySQL', drv:'mysql 8', impl:true, on:true, st:'Operational', cnt:2866, fr:2.2 },
+      { n:'MariaDB', drv:'mysql 10.11', impl:true, on:true, st:'Operational', cnt:912, fr:3.6 },
+      { n:'SQL Server', drv:'sqlsrv 5.12', impl:true, on:true, st:'Degraded', cnt:1203, fr:4.9 },
+      { n:'SQLite (uploads)', drv:'sqlite 3.45', impl:true, on:true, st:'Operational', cnt:641, fr:0.7 },
+      { n:'MongoDB', drv:'—', impl:false, on:false }, { n:'Oracle Database', drv:'—', impl:false, on:false },
+      { n:'Google BigQuery', drv:'—', impl:false, on:false }, { n:'Snowflake', drv:'—', impl:false, on:false }, { n:'Amazon Redshift', drv:'—', impl:false, on:false }
+    ],
+    auditId: 100,
+    auditRows: [
+      { id:1, t:'28 Oct 02:41:08', a:'Amara Nwosu', c:'Admin action', e:'user.suspend', g:'ibrahim@kadunafoods.example', o:'Success', ip:'102.89.34.17' },
+      { id:2, t:'28 Oct 02:36:52', a:'system', c:'Connection', e:'connection.health_check', g:'conn_a77d02', o:'Failed', ip:'—' },
+      { id:3, t:'28 Oct 02:21:30', a:'Chidi Okeke', c:'Authentication', e:'auth.login_failed', g:'chidi@northwind.example', o:'Failed', ip:'41.58.201.6' },
+      { id:4, t:'28 Oct 02:14:09', a:'Amara Nwosu', c:'Configuration', e:'settings.update', g:'ai.timeout', o:'Success', ip:'102.89.34.17' },
+      { id:5, t:'28 Oct 01:58:44', a:'Zainab Lawal', c:'Upload', e:'dataset.import_complete', g:'ds_91a3f0', o:'Success', ip:'105.112.8.40' },
+      { id:6, t:'28 Oct 01:42:17', a:'Support admin', c:'Admin action', e:'connection.disable', g:'conn_e40b16', o:'Denied', ip:'102.89.34.22' },
+      { id:7, t:'28 Oct 01:30:03', a:'system', c:'Query', e:'query.rejected_write_attempt', g:'conn_5c8e90', o:'Denied', ip:'—' },
+      { id:8, t:'28 Oct 01:12:55', a:'system', c:'Connection', e:'schema.refresh', g:'conn_8f2a41', o:'Success', ip:'—' },
+      { id:9, t:'27 Oct 23:47:21', a:'Amara Nwosu', c:'Authentication', e:'auth.mfa_verified', g:'amara', o:'Success', ip:'102.89.34.17' },
+      { id:10, t:'27 Oct 22:05:12', a:'system', c:'Upload', e:'dataset.import_failed', g:'ds_44c0a1', o:'Failed', ip:'—' }
+    ],
+    get filteredAudit() { const q = this.aq.toLowerCase(); return this.auditRows.filter(a => (!this.ac || a.c === this.ac) && (!q || (a.a + a.e + a.g).toLowerCase().includes(q))); },
+    audit(ev, target) { this.auditRows.unshift({ id: ++this.auditId, t:'29 Oct 02:58:00', a:'Amara Nwosu', c: ev.startsWith('connection') ? 'Connection' : 'Admin action', e:ev, g:target, o:'Success', ip:'102.89.34.17' }); },
+    adminAct(msg, ev, target) { this.audit(ev, target); this.toast(msg); }
+  };
+}
+</script>
+
+</body></html>
